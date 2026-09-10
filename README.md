@@ -221,9 +221,8 @@ project's pnpm/Next.js stack (no deployment/workflow-shape changes):
 - **`c_test.yml`** — runs `pnpm test:coverage` (see "Coverage" in `.ai/quality/TESTING.md`).
   Runs on every PR. No separate linting/formatting job — Husky's pre-commit/pre-push hooks
   already enforce format/lint locally before anything reaches a PR.
-- **`pull_request_actions.yml`** — deploys the PR's branch to the `dev` environment, but only
-  when the PR carries a `deploy` label (add it manually when you want a live preview of that
-  PR; most PRs don't need one). **`release_actions.yml`** — manual deploy to any environment.
+- **`release_actions.yml`** — manual deploy to any environment (`workflow_dispatch`); the
+  only caller of `c_build_and_deploy.yml` in this repo.
 - **`c_build_and_deploy.yml`** — the actual build+deploy: builds on the runner, then builds
   and pushes the Docker image and deploys it to Azure App Service via the shared
   `Sport-Auto-Plus-GmbH/infrastructure` action. The old repo's per-environment
