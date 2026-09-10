@@ -3,35 +3,32 @@ import { describe, expect, it, vi } from 'vitest'
 
 import HomePage from '@/app/page'
 
-const { fetchPageBySlug } = vi.hoisted(() => ({ fetchPageBySlug: vi.fn() }))
+const { fetchRawPageBySlug } = vi.hoisted(() => ({ fetchRawPageBySlug: vi.fn() }))
 
-vi.mock('@/lib/cms/page/fetch-page-by-slug', () => ({ fetchPageBySlug }))
+vi.mock('@/lib/cms/page/fetch-page-by-slug', () => ({ fetchRawPageBySlug }))
+vi.mock('@/components/landing/page-renderer/page-renderer', () => ({
+  PageRenderer: ({ initialRawPage }: { initialRawPage: { title: string } }) => (
+    <div data-testid="page-renderer">{initialRawPage.title}</div>
+  ),
+}))
 
 describe('HomePage', () => {
-  it('renders the heroTeaser block of the "home" page', async () => {
-    fetchPageBySlug.mockResolvedValue({
+  it('renders the PageRenderer with the fetched "home" page', async () => {
+    fetchRawPageBySlug.mockResolvedValue({
       id: 1,
       title: 'Startseite',
       slug: 'home',
-      blocks: [
-        {
-          id: 'block-1',
-          blockType: 'heroTeaser',
-          headline: { text: 'Ihr Traumauto wartet auf Sie', fontSize: 'xl', color: '#E94E1D' },
-          subheadline: { text: '', fontSize: 'md', color: '#323E48' },
-          description: { text: '', fontSize: 'md', color: '#323E48' },
-        },
-      ],
+      layout: [],
     })
 
     render(await HomePage())
 
-    expect(screen.getByText('Ihr Traumauto wartet auf Sie')).toBeTruthy()
-    expect(fetchPageBySlug).toHaveBeenCalledWith('home')
+    expect(screen.getByTestId('page-renderer')).toHaveTextContent('Startseite')
+    expect(fetchRawPageBySlug).toHaveBeenCalledWith('home')
   })
 
   it('shows a fallback message when no "home" page exists yet', async () => {
-    fetchPageBySlug.mockResolvedValue(null)
+    fetchRawPageBySlug.mockResolvedValue(null)
 
     render(await HomePage())
 

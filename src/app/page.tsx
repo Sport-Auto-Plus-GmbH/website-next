@@ -1,12 +1,12 @@
-import { HeroTeaser } from '@/components/landing/hero-teaser/hero-teaser'
-import { fetchPageBySlug } from '@/lib/cms/page/fetch-page-by-slug'
+import { PageRenderer } from '@/components/landing/page-renderer/page-renderer'
+import { fetchRawPageBySlug } from '@/lib/cms/page/fetch-page-by-slug'
 
 const HOMEPAGE_SLUG = 'home'
 
 export default async function HomePage() {
-  const page = await fetchPageBySlug(HOMEPAGE_SLUG)
+  const rawPage = await fetchRawPageBySlug(HOMEPAGE_SLUG)
 
-  if (!page) {
+  if (!rawPage) {
     return (
       <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col items-center justify-center px-6 py-24 text-center">
         <p className="text-muted-foreground">
@@ -17,16 +17,5 @@ export default async function HomePage() {
     )
   }
 
-  return (
-    <main className="flex flex-1 flex-col">
-      {page.blocks.map((block) => {
-        switch (block.blockType) {
-          case 'heroTeaser':
-            return <HeroTeaser key={block.id} {...block} />
-          default:
-            return null
-        }
-      })}
-    </main>
-  )
+  return <PageRenderer initialRawPage={rawPage} />
 }

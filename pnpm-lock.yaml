@@ -23,6 +23,9 @@ importers:
       '@fortawesome/react-fontawesome':
         specifier: ^3.5.0
         version: 3.5.0(@fortawesome/fontawesome-svg-core@7.3.1)(react@19.2.8)
+      '@payloadcms/live-preview-react':
+        specifier: 3.88.0
+        version: 3.88.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -723,6 +726,15 @@ packages:
 
   '@oxc-project/types@0.149.0':
     resolution: {integrity: sha512-Efcc+iF0j3Bf67YjEqIqWXbX5XddXoK/Mw4K1/JuXwRCZ8N16VR7iT23nlCc9XrveFVh/E5Rqs2StT0V8v9LdA==}
+
+  '@payloadcms/live-preview-react@3.88.0':
+    resolution: {integrity: sha512-Pmlo1xczmOetyyC4rhtp50b0/biYE62+w09hKImN26v8DBNCqZ8b699mknOCo60mar4V4KrlvksCpL9t2e0dHA==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.1 || ^19.1.2 || ^19.2.1
+      react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.1 || ^19.1.2 || ^19.2.1
+
+  '@payloadcms/live-preview@3.88.0':
+    resolution: {integrity: sha512-Be6bC3j1Yd+rDfjRKz2MVtfr8hJUHG+jLeRaN2yWjQRoWCxFB9srBmob8FXD7azTS73d56hrDCNyzQx5HbgK6A==}
 
   '@radix-ui/number@1.1.3':
     resolution: {integrity: sha512-Road2bidD0uu/1BGDOWNdPI06g0lIRy6IF9GZcIrDK2KGItfor8IQwQa+yM2ERgHM1MmHxaxpTzk0/Jp42lNfA==}
@@ -5206,6 +5218,14 @@ snapshots:
   '@nolyfill/is-core-module@1.0.39': {}
 
   '@oxc-project/types@0.149.0': {}
+
+  '@payloadcms/live-preview-react@3.88.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
+    dependencies:
+      '@payloadcms/live-preview': 3.88.0
+      react: 19.2.8
+      react-dom: 19.2.8(react@19.2.8)
+
+  '@payloadcms/live-preview@3.88.0': {}
 
   '@radix-ui/number@1.1.3': {}
 

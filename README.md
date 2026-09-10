@@ -173,8 +173,28 @@ covering every block, since that only gets worse as more blocks are added:
   editor-controlled text, font size, and color).
 
 Adding a second block type: a new file in each of the three locations above, a `case` in
-`fetch-page-by-slug.ts`'s `mapBlock`, and a `case` in `page.tsx`'s render switch — matching
-whatever block payload-next added under its own `src/blocks/content/`.
+`fetch-page-by-slug.ts`'s `mapBlock`, and a `case` in `page-renderer.tsx`'s render switch —
+matching whatever block payload-next added under its own `src/blocks/content/`.
+
+### Live Preview
+
+`page.tsx` fetches the raw (unmapped) page via `fetchRawPageBySlug` and hands it to
+**`src/components/landing/page-renderer/page-renderer.tsx`**, a Client Component wrapping
+`@payloadcms/live-preview-react`'s `useLivePreview`. Inside payload-next's admin Live Preview
+iframe, this subscribes to the admin's `postMessage` protocol and re-renders with the
+in-editor (unsaved) form state on every keystroke — mapped through the same `mapPage` function
+`fetchPageBySlug` uses server-side, so there's exactly one mapping implementation either way.
+Outside that iframe (a normal site visitor), no message ever arrives and `data` just stays the
+server-fetched page — `useLivePreview`'s `isLoading` is intentionally never used to gate
+rendering, since it never resolves for a plain visitor. `RefreshRouteOnSave` (same component)
+triggers `router.refresh()` on an actual Save/Publish, so this tab picks up the change without
+a manual reload.
+
+Requires `NEXT_PUBLIC_PAYLOAD_API_URL` (same value as `PAYLOAD_API_URL`, but public —
+`useLivePreview` runs client-side and needs the CMS's origin to verify the `postMessage` it
+receives) and payload-next's `cors`/`csrf`/`serverURL` config (see its own README) — without
+those, the browser blocks `useLivePreview`'s cross-origin request to populate relationship
+data as a CORS error.
 
 ### Getting Fresh Content Without Waiting Out the Cache
 
