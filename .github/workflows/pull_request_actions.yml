@@ -1,0 +1,21 @@
+---
+name: Pull Request Actions
+on:
+  pull_request:
+    types: [opened, synchronize, labeled]
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  build-and-deploy:
+    name: Build and Deploy to Dev
+    uses: ./.github/workflows/c_build_and_deploy.yml
+    secrets: inherit
+    with:
+      environment: dev
+      ref: ${{ github.event.pull_request.head.sha }}
+      image_version: pr${{ github.event.pull_request.number }}.${{ github.run_number }}
+    if: |
+      contains(github.event.pull_request.labels.*.name, 'deploy') || (github.event.action == 'labeled' && github.event.label.name == 'deploy')

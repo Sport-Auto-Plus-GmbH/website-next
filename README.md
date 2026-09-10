@@ -212,3 +212,28 @@ not for anything. It fetches everything over HTTP, through two dedicated client 
 Both map their responses into this app's own view types under `src/types/`. See
 [`.ai/core/PROJECT_ARCHITECTURE.md`](.ai/core/PROJECT_ARCHITECTURE.md) for the full picture —
 including where Zustand fits in (client-only UI state, never a cache for upstream data).
+
+## CI/CD
+
+`.github/workflows/` — carried over from the old `Website-4.0` repo, adapted for this
+project's pnpm/Next.js stack (no deployment/workflow-shape changes):
+
+- **`c_linting.yml`** — formatting check + Super-linter, plus a `test` job running
+  `pnpm test:coverage` (see "Coverage" in `.ai/quality/TESTING.md`). Runs on every PR.
+- **`pull_request_actions.yml`** — deploys to the `dev` environment when a PR is labeled
+  `deploy`. **`release_actions.yml`** — manual deploy to any environment.
+- **`c_build_and_deploy.yml`** — the actual build+deploy: builds on the runner, then builds
+  and pushes the Docker image and deploys it to Azure App Service via the shared
+  `Sport-Auto-Plus-GmbH/infrastructure` action. The old repo's per-environment
+  `build:dev`/`build:staging`/`build:production` scripts don't carry over — this app reads
+  its config from environment variables at runtime (Next.js Server Components), not baked
+  in at build time, so one build serves every environment. Requires the same secrets as the
+  old repo (`FONTAWESOME_TOKEN`, `CONTAINER_REGISTRY_*`, `AZURE_*`) configured on this
+  repo/its GitHub Environments — not something this repo can set up on its own.
+
+The `Dockerfile` is a fresh Next.js one (the old repo's is Angular/nginx-specific and doesn't
+apply here) — same pattern as `payload-next`'s: builds once on the runner, the image just
+installs production dependencies and copies the pre-built `.next/standalone` output. Not
+carried over: the old repo's Azure Web-Shell SSH debug access
+(`docker-resources/azure-entrypoint.sh`) — add it deliberately if this project needs the
+same SSH-into-the-container debugging setup.

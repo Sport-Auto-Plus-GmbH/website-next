@@ -1,0 +1,110 @@
+---
+name: call-build-and-deploy
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: 'Environment to deploy to (dev, staging, prod)'
+        required: true
+        type: string
+      ref:
+        description: 'Git ref to build (e.g. PR head SHA). Omit to use triggering ref.'
+        required: false
+        type: string
+      image_version:
+        description: 'The version tag of the website:<version> image'
+        required: true
+        type: string
+    secrets:
+      FONTAWESOME_TOKEN:
+        required: true
+      CONTAINER_REGISTRY_PASS:
+        required: true
+      CONTAINER_REGISTRY_USER:
+        required: true
+      CONTAINER_REGISTRY_URL:
+        required: true
+      AZURE_TENANT_ID:
+        required: true
+      AZURE_SUBSCRIPTION_ID:
+        required: true
+      AZURE_CLIENT_ID:
+        required: true
+      AZURE_RESOURCE_GROUP:
+        required: true
+      AZURE_APP_SERVICE_ID:
+        required: true
+      CMS_APP_SERVICE_NAME:
+        required: true
+
+jobs:
+  build-and-deploy:
+    name: Build and Deploy
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Enable Corepack (pnpm)
+        run: corepack enable
+
+      - name: Create .npmrc for FontAwesome (also mounted into the Docker build as a secret)
+        run: |
+          printf "@fortawesome:registry=https://npm.fontawesome.com/\n" > .npmrc
+          printf "//npm.fontawesome.com/:_authToken=%s\n" "${{ secrets.FONTAWESOME_TOKEN }}" >> .npmrc
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+
+      - name: Build Website
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm build
+
+      - name: Build Docker image
+        env:
+          DOCKER_BUILDKIT: 1
+        run: |
+          docker build \
+            --secret id=npmrc,src=.npmrc \
+            -t website:${{ inputs.image_version }} .
+
+      - name: Normalize Container Registry URL
+        id: normalize_registry_url
+        shell: bash
+        run: |
+          REGISTRY_URL="${{ secrets.CONTAINER_REGISTRY_URL }}"
+          REGISTRY_URL="${REGISTRY_URL#https://}"
+          REGISTRY_URL="${REGISTRY_URL#http://}"
+          REGISTRY_URL="${REGISTRY_URL%/}"
+          echo "value=$REGISTRY_URL" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy
+        uses: Sport-Auto-Plus-GmbH/infrastructure/.github/actions/released@main
+        with:
+          azure_tenant_id: ${{ secrets.AZURE_TENANT_ID }}
+          azure_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          azure_client_id: ${{ secrets.AZURE_CLIENT_ID }}
+          container_registry_url: ${{ steps.normalize_registry_url.outputs.value }}
+          container_registry_user: ${{ secrets.CONTAINER_REGISTRY_USER }}
+          container_registry_password: ${{ secrets.CONTAINER_REGISTRY_PASS }}
+          image_name: website
+          image_tag: ${{ inputs.image_version }}
+          app_service_resource_group: ${{ secrets.AZURE_RESOURCE_GROUP }}
+          app_service_id: ${{ secrets.AZURE_APP_SERVICE_ID }}
