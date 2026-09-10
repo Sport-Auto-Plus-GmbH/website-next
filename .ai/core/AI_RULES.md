@@ -182,6 +182,33 @@ FontAwesome Pro+, Zustand.
 
 ---
 
+# UI Components: shadcn/ui Only
+
+shadcn/ui is the only component library in this project. For every UI need — buttons,
+dialogs, forms, dropdowns, tables, tabs, and so on:
+
+The AI MUST:
+
+- use an existing `components/ui/` primitive if one already covers the need
+- add a new one via the shadcn CLI (`pnpm dlx shadcn@latest add <component>`) if shadcn
+  provides it but it hasn't been added yet
+
+The AI MUST NOT:
+
+- add a second component library (Material UI, Ant Design, Headless UI, Chakra, Radix
+  used directly instead of through shadcn, etc.), even for a single one-off component
+- hand-roll a custom component that duplicates what a shadcn/ui primitive already does
+  (a custom modal instead of `Dialog`, a custom dropdown instead of `DropdownMenu`/`Select`)
+
+If shadcn/ui genuinely has no primitive for a need, build the smallest possible composition
+of existing primitives first; only write a fully custom component as a last resort, and
+still base it on the project's existing styling tokens (`core/CODE_STYLE.md`,
+`frontend/TAILWIND.md`) rather than inventing a new visual language.
+
+→ See `frontend/SHADCN.md` for the full pattern.
+
+---
+
 # File Organization
 
 The AI MUST:

@@ -1,6 +1,8 @@
 # shadcn/ui
 
-Rules for using shadcn/ui components in this project.
+Rules for using shadcn/ui components in this project. shadcn/ui is the **only** UI component
+library here — see `core/AI_RULES.md`'s "UI Components: shadcn/ui Only" section. No second
+component library, and no hand-rolled component that duplicates a shadcn primitive.
 
 ---
 
