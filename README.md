@@ -176,6 +176,15 @@ Adding a second block type: a new file in each of the three locations above, a `
 `fetch-page-by-slug.ts`'s `mapBlock`, and a `case` in `page.tsx`'s render switch — matching
 whatever block payload-next added under its own `src/blocks/content/`.
 
+### Getting Fresh Content Without Waiting Out the Cache
+
+`fetch-page-by-slug.ts` caches each page for up to an hour (`next: { revalidate: 3600, tags:
+['page:<slug>'] }`) — normally that means an editor's save wouldn't show up here for up to an
+hour. **`src/app/api/revalidate/route.ts`** is what closes that gap: payload-next's `Pages`
+collection calls it (with a shared secret, `REVALIDATE_SECRET`) right after a save, which
+revalidates that specific `page:<slug>` tag immediately. See `.ai/backend/ROUTE_HANDLERS.md`
+and payload-next's own README for the other side of this.
+
 ## Datendrehscheibe API Types
 
 The Datendrehscheibe publishes real OpenAPI specs. Rather than hand-writing types for its
