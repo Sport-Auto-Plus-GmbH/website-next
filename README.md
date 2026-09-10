@@ -35,16 +35,16 @@ Required Node.js version: developed and tested on Node 24. Required pnpm version
 
 The project has a valid FontAwesome Pro+ license, and the Pro icon packages are already
 installed (`pro-regular`, `pro-solid`, `pro-duotone`). Fetching them requires a private npm
-registry token, set per-developer in your own global `~/.npmrc` (never in this project's
-committed `.npmrc`, which only maps `@fortawesome` to FontAwesome's registry):
+registry token:
 
-```
-//npm.fontawesome.com/:_authToken=YOUR_TOKEN_HERE
+```bash
+cp .npmrc.example .npmrc
 ```
 
-Without it, `pnpm install` will fail to fetch the `@fortawesome/pro-*` packages. Ask whoever
-manages the license for the token. See [`.ai/frontend/ICONS.md`](.ai/frontend/ICONS.md) for
-usage rules.
+Then fill in your own token (ask whoever manages the license) in place of
+`YOUR_FONTAWESOME_TOKEN_HERE`. `.npmrc` is gitignored — never commit it. Without a valid
+token, `pnpm install` will fail to fetch the `@fortawesome/pro-*` packages. See
+[`.ai/frontend/ICONS.md`](.ai/frontend/ICONS.md) for usage rules.
 
 See [`.ai/frontend/ICONS.md`](.ai/frontend/ICONS.md) for usage rules once installed.
 

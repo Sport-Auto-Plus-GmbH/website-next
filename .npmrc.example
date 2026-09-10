@@ -1,0 +1,6 @@
+# Routes @fortawesome Pro packages to FontAwesome's private registry.
+@fortawesome:registry=https://npm.fontawesome.com/
+
+# Copy this file to .npmrc (gitignored) and fill in your own FontAwesome
+# Pro npm auth token — ask whoever manages the license.
+//npm.fontawesome.com/:_authToken=YOUR_FONTAWESOME_TOKEN_HERE

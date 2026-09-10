@@ -36,6 +36,9 @@ yarn-error.log*
 .env.*.local
 !.env.example
 
+# contains the FontAwesome npm auth token — see .npmrc.example
+.npmrc
+
 # vercel
 .vercel
 
