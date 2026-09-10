@@ -1,7 +1,8 @@
 # Testing
 
 Rules for automated testing in this project. Test runner: Vitest, with React Testing
-Library for components/hooks.
+Library for components/hooks. `pnpm test` runs the suite once; `pnpm test:coverage` runs it
+with coverage (see "Coverage" below).
 
 ---
 
@@ -58,8 +59,39 @@ patching assertions around a stale fixture.
 
 ---
 
+# Coverage
+
+This project enforces a minimum of **80% coverage** (lines, statements, functions, branches)
+via `pnpm test:coverage` (`vitest.config.mts`'s `coverage.thresholds`) — enforced in CI, so a
+PR that drops below it fails the build. Components, hooks, `lib/` functions, and Zustand
+stores all need tests written alongside them going forward, not bolted on afterward.
+
+`coverage.exclude` carves out what genuinely isn't hand-written application logic:
+`types/**` (type-only, nothing to execute), `components/ui/**` and `lib/utils.ts` (shadcn's
+own generated/vendored code — see "What Not to Over-Test" above). Do not add something to
+this list just to dodge the threshold — every exclusion needs the same justification as the
+existing ones: generated/vendored, not "hard to test."
+
+Two non-obvious things when testing a Server Component (`app/**/page.tsx`, `layout.tsx`):
+
+- **`next/font/google`'s exports are compiler macros.** Outside Next's own build pipeline
+  (i.e. under plain Vitest) `Bebas_Neue`/`Roboto`/etc. aren't real functions and calling them
+  throws. Mock `next/font/google` in the test, returning `{ variable: '...' }` for whichever
+  font functions the component under test actually calls.
+- **RTL needs `cleanup()` between tests.** Already wired up globally in `vitest.setup.ts` —
+  without it, multiple `render()` calls in the same file leak elements into jsdom's shared
+  document, breaking single-element queries (`getByText`, `getByAltText`) on the second test
+  onward. If you ever see a "multiple elements found" error in a previously-passing test, this
+  is the first thing to check.
+- A root `layout.tsx` renders `<html>`/`<body>` — RTL's `render()` can't mount those directly
+  (it inserts into a `<div>`, and nesting `<html>` inside one is invalid). Call the async
+  component function directly (`await RootLayout({ children, params: Promise.resolve({}) })`)
+  and assert on the returned element's `.props` instead of rendering it.
+
+---
+
 # Running Tests
 
-The AI MAY run `pnpm test` (or the project's configured Vitest script) to verify a change.
-The AI MUST NOT start the dev server to "manually verify" — use tests and, where available,
-a preview/build check instead.
+The AI MAY run `pnpm test`, `pnpm test:coverage`, `pnpm lint`, and `pnpm typecheck` to verify
+a change. The AI MUST NOT start the dev server to "manually verify" — use tests and, where
+available, a preview/build check instead.

@@ -99,6 +99,7 @@ All commands below are run from inside this folder (`website-next/`).
 | `pnpm format:check`                    | Check formatting without changing files                          |
 | `pnpm test`                            | Run the test suite once                                          |
 | `pnpm test:watch`                      | Run tests in watch mode                                          |
+| `pnpm test:coverage`                   | Run the test suite with coverage; fails under 80%                |
 | `pnpm generate:datendrehscheibe-types` | Regenerate types from the vendored Datendrehscheibe OpenAPI spec |
 
 A pre-commit hook (via Husky + lint-staged) automatically lints and formats the files you're

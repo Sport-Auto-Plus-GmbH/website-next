@@ -16,6 +16,7 @@
     "dev:sync-datendrehscheibe": "chokidar \"../Datendrehscheibe/de.saplus.datahub.api.http/src/main/openapi/**/*.yaml\" -c \"pnpm sync:datendrehscheibe\" --initial",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "prepare": "husky"
   },
   "lint-staged": {
@@ -53,6 +54,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^6.1.1",
+    "@vitest/coverage-v8": "^5.0.0",
     "chokidar-cli": "^3.0.0",
     "dotenv": "^17.4.2",
     "eslint": "^9",
