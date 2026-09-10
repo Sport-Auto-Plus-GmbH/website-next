@@ -126,6 +126,26 @@ Everything application-specific lives under `src/`:
 Tests live under the root `test/` folder, mirroring the `src/` structure (never colocated
 with source files) — see `test/lib/cms/media/fetch-media-list.test.ts` for an example.
 
+## Corporate Design
+
+The site's brand colors and logo come from `payload-next`'s `corporate-identity` global, not
+from hardcoded values:
+
+- **`src/lib/cms/corporate-identity/fetch-corporate-identity.ts`** fetches the global and maps
+  it into a `CorporateIdentity` view type (`src/types/cms/corporate-identity/`). It sanitizes
+  the color fields (must be a valid `#rrggbb` hex) and resolves the logo to an absolute URL,
+  falling back to the static `public/cd/logo/sport-auto-plus-logo.svg` if the CMS has no logo
+  set or is unreachable.
+- **`src/app/layout.tsx`** calls it and sets `--primary` / `--secondary` / `--destructive` as
+  inline CSS custom properties on `<html>`, overriding the CD-default values already in
+  `globals.css` — so changing a color in the Payload admin panel takes effect on the next
+  request, no redeploy needed.
+- **Fonts**: Bebas Neue (`--font-heading`, used by e.g. `CardTitle`) and Roboto (`--font-sans`,
+  body text) are loaded via `next/font/google` in `layout.tsx`, per the CD document.
+- **No dark mode.** `globals.css` keeps the `dark:` Tailwind variant scoped to a `.dark` class
+  that's never applied anywhere, so shadcn's built-in `dark:` utility classes stay inert
+  regardless of the visitor's OS color-scheme setting — deliberately light-only for now.
+
 ## Datendrehscheibe API Types
 
 The Datendrehscheibe publishes real OpenAPI specs. Rather than hand-writing types for its

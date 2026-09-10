@@ -1,25 +1,37 @@
 import { faArrowUpRight, faCircleCheck } from '@fortawesome/pro-regular-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import Image from 'next/image'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { fetchCorporateIdentity } from '@/lib/cms/corporate-identity/fetch-corporate-identity'
 import { fetchMediaList } from '@/lib/cms/media/fetch-media-list'
 
 const BUTTON_VARIANTS = ['default', 'secondary', 'outline', 'ghost', 'destructive', 'link'] as const
 const BUTTON_SIZES = ['sm', 'default', 'lg'] as const
 
 export default async function HomePage() {
-  const { totalCount } = await fetchMediaList()
+  const [{ totalCount }, { logoUrl }] = await Promise.all([
+    fetchMediaList(),
+    fetchCorporateIdentity(),
+  ])
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-10 px-6 py-16">
       <section className="rounded-xl bg-gradient-to-br from-primary to-primary/70 p-10 text-primary-foreground">
-        <p className="text-sm font-medium uppercase tracking-wide opacity-80">website-next</p>
-        <h1 className="mt-2 text-4xl font-bold tracking-tight text-balance">
-          Tailwind CSS and shadcn/ui are wired up and working.
+        <Image
+          src={logoUrl}
+          alt="Sport Auto Plus"
+          width={232}
+          height={64}
+          style={{ height: '4rem', width: 'auto' }}
+          priority
+        />
+        <h1 className="mt-6 font-heading text-5xl tracking-wide text-balance">
+          Tailwind CSS and shadcn/ui are wired up with the Sport Auto Plus design.
         </h1>
         <p className="mt-4 max-w-xl text-primary-foreground/90">
-          This page is the scaffold&apos;s proof-of-concept — no brand design applied yet.
+          Colors and logo come live from the corporate-identity global in payload-next.
         </p>
       </section>
 
