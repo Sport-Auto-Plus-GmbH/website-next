@@ -1,0 +1,31 @@
+openapi: 3.1.1
+info:
+  title: Common components
+  version: "1.0"
+components:
+  schemas:
+    Utm:
+      type: object
+      properties:
+        source:
+          type: string
+          example:
+        medium:
+          type: string
+          example:
+        campaign:
+          type: string
+          example:
+        content:
+          type: string
+          example:
+        term:
+          type: string
+          example:
+        gclid:
+          type: string
+          example:
+        fbclid:
+          type: string
+          example:
+

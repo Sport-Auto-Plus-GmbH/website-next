@@ -137,10 +137,16 @@ openapi/datendrehscheibe/api-vehicles-v1.0.yaml   vendored copy (+ its common/ r
 src/lib/datendrehscheibe/generated/vehicles.d.ts  generated — never hand-edit
 ```
 
-If the Datendrehscheibe's API changes, update the vendored file(s) under
-`openapi/datendrehscheibe/` (if you have that repo checked out as a sibling folder, run
-`./scripts/sync-datendrehscheibe-openapi.sh`; otherwise ask a teammate for the current spec),
-then run `pnpm generate:datendrehscheibe-types`. See
+If you have the Datendrehscheibe repo checked out as a sibling folder, `pnpm
+sync:datendrehscheibe` updates the vendored file(s) (via its own `tools/openapi-sync/` Node
+tool — this repo never hardcodes Datendrehscheibe's internal folder layout) and regenerates
+types in one step. Without that sibling checkout, ask a teammate for the current spec and
+copy it into `openapi/datendrehscheibe/` by hand, then run
+`pnpm generate:datendrehscheibe-types`.
+
+While developing locally with both repos checked out side by side, run
+`pnpm dev:sync-datendrehscheibe` in its own terminal to auto-sync whenever Datendrehscheibe's
+OpenAPI files change. See
 [`.ai/backend/DATENDREHSCHEIBE_CLIENT.md`](.ai/backend/DATENDREHSCHEIBE_CLIENT.md) for the
 full pattern, including how to add a second API domain later.
 

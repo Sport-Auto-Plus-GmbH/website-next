@@ -1,25 +1,25 @@
 #!/usr/bin/env bash
-# Convenience script for local workspaces that have the Datendrehscheibe repo
-# checked out as a sibling folder (../Datendrehscheibe). Not used in CI or by
-# anyone without that checkout — the vendored copy in openapi/datendrehscheibe/
-# is the source of truth for this repo either way.
+# Convenience wrapper for local workspaces that have the Datendrehscheibe repo
+# checked out as a sibling folder (../Datendrehscheibe). Delegates to its own
+# openapi-sync Node tool (tools/openapi-sync/) — this repo never needs to know
+# Datendrehscheibe's internal module layout, only Datendrehscheibe does. That
+# tool is plain Node, so it (and this sync) works the same on any OS; this
+# bash wrapper is just a shortcut for macOS/Linux shells.
 #
 # Usage: ./scripts/sync-datendrehscheibe-openapi.sh
 # Then review the diff, and run `pnpm generate:datendrehscheibe-types`.
 set -euo pipefail
 
-SOURCE="../Datendrehscheibe/de.saplus.datahub.api.http/src/main/openapi"
+SYNC_TOOL="../Datendrehscheibe/tools/openapi-sync/sync.js"
 DEST="openapi/datendrehscheibe"
 
-if [ ! -d "$SOURCE" ]; then
-  echo "error: $SOURCE not found — this script only works when the Datendrehscheibe repo" >&2
+if [ ! -f "$SYNC_TOOL" ]; then
+  echo "error: $SYNC_TOOL not found — this script only works when the Datendrehscheibe repo" >&2
   echo "is checked out as a sibling folder. Ask a teammate for the current spec files" >&2
   echo "and copy them into $DEST manually instead." >&2
   exit 1
 fi
 
-cp "$SOURCE/api-vehicles-v1.0.yaml" "$DEST/api-vehicles-v1.0.yaml"
-cp "$SOURCE/common/error.yaml" "$DEST/common/error.yaml"
-cp "$SOURCE/common/security.yaml" "$DEST/common/security.yaml"
+node "$SYNC_TOOL" --domain vehicles --dest "$DEST"
 
-echo "Synced. Review the diff, then run: pnpm generate:datendrehscheibe-types"
+echo "Review the diff, then run: pnpm generate:datendrehscheibe-types"

@@ -39,18 +39,31 @@ src/lib/datendrehscheibe/generated/vehicles.d.ts  generated — never hand-edit
 
 ## Updating the Vendored Spec
 
+Datendrehscheibe owns a small Node tool (`tools/openapi-sync/` in its own repo) that exports
+its spec files — this repo never hardcodes Datendrehscheibe's internal module layout
+(`de.saplus.datahub.api.http/src/main/openapi/...`), only that tool does. Being plain Node,
+it runs the same way on every OS.
+
 When the Datendrehscheibe's API changes:
 
-1. Get the updated YAML file(s) (`./scripts/sync-datendrehscheibe-openapi.sh` if you have the
-   Datendrehscheibe repo checked out as a sibling folder, otherwise ask a teammate).
-2. Replace the file(s) under `openapi/datendrehscheibe/`, review the diff.
-3. Run `pnpm generate:datendrehscheibe-types`.
-4. Fix any type errors this surfaces in `lib/datendrehscheibe/` — that's the contract
+1. `pnpm sync:datendrehscheibe` (needs the Datendrehscheibe repo checked out as a sibling
+   folder — runs its `tools/openapi-sync/sync.js --domain vehicles --dest
+   openapi/datendrehscheibe` and then regenerates types in one step). Without that sibling
+   checkout, ask a teammate for the updated YAML file(s) and copy them into
+   `openapi/datendrehscheibe/` by hand instead.
+2. Review the diff.
+3. Fix any type errors this surfaces in `lib/datendrehscheibe/` — that's the contract
    actually changing, not a false positive.
 
-Adding a second domain (e.g. checkout) means vendoring that spec too, adding a
-`generate:datendrehscheibe-types` step for it, and merging its `paths` type into
-`lib/datendrehscheibe/client.ts` (a second `createClient` or an intersected `paths` type —
+For local development where both repos are checked out side by side,
+`pnpm dev:sync-datendrehscheibe` (in a separate terminal, alongside `pnpm dev`) watches
+Datendrehscheibe's OpenAPI folder and re-syncs automatically whenever it changes.
+
+Adding a second domain (e.g. checkout) means vendoring that spec too (`pnpm exec node
+../Datendrehscheibe/tools/openapi-sync/sync.js --domain checkout --dest
+openapi/datendrehscheibe`), adding a `generate:datendrehscheibe-types` step for it, and
+merging its `paths` type into `lib/datendrehscheibe/client.ts` (a second `createClient` or an
+intersected `paths` type —
 decide when it's actually needed).
 
 ---

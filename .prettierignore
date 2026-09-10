@@ -1,4 +1,8 @@
 # Prose docs, not code — hand-wrapped, not meant to be machine-reformatted.
 .ai/**
 
+# Vendored external contracts — must stay byte-identical to the upstream source
+# so re-syncing produces a clean diff instead of quote-style noise.
+openapi/datendrehscheibe/**
+
 pnpm-lock.yaml

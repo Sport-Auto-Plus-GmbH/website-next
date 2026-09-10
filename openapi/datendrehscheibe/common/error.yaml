@@ -5,7 +5,7 @@ openapi: 3.1.1
 info:
   title: Error Schema
   description: This document defines the structure of problem details responses for API errors. According to RFC 9457.
-  version: '1.0'
+  version: "1.0"
 paths: {}
 components:
   responses:
@@ -51,7 +51,7 @@ components:
           description: An array of error details to accompany a problem details response.
           maxItems: 1000
           items:
-            $ref: '#/components/schemas/ProblemDetailsErrorResource'
+            $ref: "#/components/schemas/ProblemDetailsErrorResource"
       required:
         - detail
 

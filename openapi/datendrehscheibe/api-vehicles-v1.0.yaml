@@ -4,7 +4,7 @@ info:
   title: Datahub Vehicles API
   description: |-
     This API contains endpoints for fetching Vehicles and related data from Datahub.
-  version: '1.0'
+  version: "1.0"
 servers:
   - url: http://localhost:8080
   - url: https://datahub-dev.sportautoplus.de
@@ -13,7 +13,7 @@ servers:
 tags:
   - name: vehicle
 paths:
-  '/api/vehicle/v1.0/vehicles':
+  "/api/vehicle/v1.0/vehicles":
     get:
       tags:
         - vehicles
@@ -30,7 +30,7 @@ paths:
                   $ref: '#/components/schemas/VehicleGetResource'
         default:
           $ref: './common/error.yaml#/components/responses/default'
-  '/api/vehicle/v1.0/vehicles/{vehicleViewId}':
+  "/api/vehicle/v1.0/vehicles/{vehicleViewId}":
     get:
       tags:
         - vehicles
@@ -56,7 +56,7 @@ paths:
           description: No vehicle found for the given IDs
         default:
           $ref: './common/error.yaml#/components/responses/default'
-  '/api/vehicle/v1.0/vehicles/topOffer':
+  "/api/vehicle/v1.0/vehicles/topOffer":
     get:
       tags:
         - vehicles
@@ -73,7 +73,7 @@ paths:
           description: No Top-Offer found
         default:
           $ref: './common/error.yaml#/components/responses/default'
-  '/api/vehicle/v1.0/vehicles/offers':
+  "/api/vehicle/v1.0/vehicles/offers":
     get:
       tags:
         - vehicles
@@ -90,7 +90,7 @@ paths:
                   $ref: '#/components/schemas/VehicleGetResource'
         default:
           $ref: './common/error.yaml#/components/responses/default'
-  '/api/vehicle/v1.0/vehicles/filter':
+  "/api/vehicle/v1.0/vehicles/filter":
     get:
       tags:
         - vehicles
@@ -106,7 +106,7 @@ paths:
         default:
           $ref: './common/error.yaml#/components/responses/default'
 
-  '/api/vehicle/v1.0/vehicles/brands':
+  "/api/vehicle/v1.0/vehicles/brands":
     get:
       tags:
         - vehicles
@@ -124,7 +124,7 @@ paths:
         default:
           $ref: './common/error.yaml#/components/responses/default'
 
-  '/api/vehicle/v1.0/vehicles/favorites':
+  "/api/vehicle/v1.0/vehicles/favorites":
     get:
       tags:
         - vehicles
@@ -144,7 +144,7 @@ paths:
         default:
           $ref: './common/error.yaml#/components/responses/default'
 
-  '/api/vehicle/v1.0/vehicles/favorites/{vehicleViewId}':
+  "/api/vehicle/v1.0/vehicles/favorites/{vehicleViewId}":
     post:
       tags:
         - vehicles
@@ -242,12 +242,12 @@ components:
           type: array
           items:
             type: string
-          example: ['08.2025', '09.2025', '10.2025', '11.2025']
+          example: ["08.2025", "09.2025", "10.2025", "11.2025"]
         availableUntilDates:
           type: array
           items:
             type: string
-          example: ['08.2025', '09.2025', '10.2025', '11.2025']
+          example: ["08.2025", "09.2025", "10.2025", "11.2025"]
         termMonths:
           type: array
           items:
@@ -266,7 +266,7 @@ components:
           type: array
           items:
             type: string
-          example: ['Highlight', 'Kurzfristig verfügbar', 'Premium']
+          example: ["Highlight", "Kurzfristig verfügbar", "Premium"]
         mileage:
           type: array
           items:
@@ -276,7 +276,7 @@ components:
           type: array
           items:
             type: string
-          example: ['Frontantrieb', 'Heckantrieb', 'Allrad']
+          example: ["Frontantrieb", "Heckantrieb", "Allrad"]
 
     VehicleGetResource:
       type: object
@@ -396,7 +396,7 @@ components:
           example:
         driveType:
           type: string
-          example: 'Frontantrieb'
+          example: "Frontantrieb"
         mainImage:
           type: string
           description: URL to Hubspots CDN

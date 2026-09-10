@@ -1,0 +1,15 @@
+---
+# This document defines the structure of problem details responses for API errors.
+# According to RFC 9457
+openapi: 3.1.1
+info:
+  title: Success Schema
+  version: "1.0"
+paths: {}
+components:
+  schemas:
+    Success:
+      type: object
+      properties:
+        message:
+          type: string
