@@ -40,6 +40,12 @@ Every AI agent MUST read this playbook before making implementation decisions.
 - `backend/VALIDATION.md`
 - `backend/SECURITY.md`
 
+### Data Hub Integration Task (Datendrehscheibe)
+
+- `backend/DATENDREHSCHEIBE_CLIENT.md` — how the Website talks to the Datendrehscheibe's
+  HTTP API (a second, independent upstream system from Payload)
+- `backend/SECURITY.md` — this repo MUST NEVER hold a direct database connection
+
 ### Code Review / Review Artifacts
 
 - `quality/CODE_REVIEW.md`

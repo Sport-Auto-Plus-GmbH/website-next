@@ -145,16 +145,22 @@ Zustand stores own cross-component client state. Never violate these boundaries.
 
 ---
 
-# Treat Payload as an External Service
+# Treat Every Upstream System as an External Service
 
-The Website MUST treat the Payload CMS as a versioned external API, not as a shared codebase.
+The Website MUST treat both the Payload CMS and the Datendrehscheibe as versioned external
+APIs, not as shared codebases — and MUST NEVER connect to either one's database directly.
 
-- Do not assume internal Payload knowledge (collection internals, hooks, access control).
-- Do not copy Payload's internal types into this repo; define slim, Website-owned view types
-  under `types/cms/` that describe only what the Website actually consumes.
-- Handle the CMS being unreachable, slow, or returning unexpected/missing fields gracefully.
+- Do not assume internal knowledge of either system (Payload's collection internals/hooks,
+  the Datendrehscheibe's internal services or schema) beyond their documented HTTP API.
+- Do not copy either system's internal types into this repo; define slim, Website-owned view
+  types under `types/cms/` or `types/datendrehscheibe/` that describe only what the Website
+  actually consumes.
+- Handle either upstream system being unreachable, slow, or returning unexpected/missing
+  fields gracefully.
+- Never introduce a database connection, ORM, or credential for either system's database —
+  the HTTP API is the only access point, ever.
 
-→ See `backend/CMS_CLIENT.md`.
+→ See `backend/CMS_CLIENT.md` and `backend/DATENDREHSCHEIBE_CLIENT.md`.
 
 ---
 

@@ -54,17 +54,25 @@ MUST keep the codebase consistent. Consistency is more valuable than personal pr
 
 # This Is a Frontend, Not a Backend
 
-The Website has no database and no ORM.
+The Website has no database and no ORM — for Payload's data, the Datendrehscheibe's data, or
+anything else. It never connects to a database directly, under any circumstances.
 
 The AI MUST NOT:
 
 - add Prisma, Drizzle, or any database driver to this project
-- query a database directly from this repository
-- assume it can see Payload's internal types, collections, or hooks
+- query a database directly from this repository, for any system
+- add a connection string, DB host, DB credential, or ORM client for any database, anywhere
+  in this repo (not even server-side, not even in an env var)
+- assume it can see Payload's internal types, collections, or hooks, or the
+  Datendrehscheibe's internal services or database schema
 
-All structured content comes from Payload's public REST API at runtime.
+All structured content comes from two upstream HTTP APIs at runtime: Payload's REST API
+(via `lib/cms/`) and the Datendrehscheibe's HTTP API (via `lib/datendrehscheibe/`). Neither
+is ever called directly from anywhere else in the codebase — see the single-client-layer
+rule in `core/PROJECT_ARCHITECTURE.md`.
 
-→ See `core/PROJECT_ARCHITECTURE.md` and `backend/CMS_CLIENT.md`.
+→ See `core/PROJECT_ARCHITECTURE.md`, `backend/CMS_CLIENT.md`, and
+`backend/DATENDREHSCHEIBE_CLIENT.md`.
 
 ---
 

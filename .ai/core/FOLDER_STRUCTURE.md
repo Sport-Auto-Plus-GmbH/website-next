@@ -33,6 +33,8 @@ hooks/
 lib/
   cms/
     <domain>/            Payload REST client + response mapping, one domain per folder
+  datendrehscheibe/
+    <domain>/            Datendrehscheibe HTTP client + response mapping, one domain per folder
   shared/
     format/               generic formatters (date, currency, stat values)
   utils.ts                shadcn cn() helper — infrastructure exception
@@ -42,6 +44,7 @@ actions/
   <domain>/<feature>/
 types/
   cms/<domain>/          Website-owned view types derived from Payload responses
+  datendrehscheibe/<domain>/  Website-owned view types derived from Datendrehscheibe responses
   <domain>/<feature>/    other domain types
 test/                    mirrors the application structure, never colocated
 reviews/<branch-folder>/ written branch reviews (see quality/CODE_REVIEW.md)
@@ -69,25 +72,30 @@ The AI MUST place exactly one React component per component file.
 # Types
 
 All custom type files MUST live under the root `types/` folder as `types/<domain>/<feature>/`.
-CMS-derived view types live under `types/cms/<domain>/` and MUST be Website-owned (only the
-fields the Website actually renders), not a copy-paste of Payload's internal generated types.
+Upstream-derived view types live under `types/cms/<domain>/` (Payload) or
+`types/datendrehscheibe/<domain>/` (Datendrehscheibe) and MUST be Website-owned (only the
+fields the Website actually renders), never a copy-paste of the upstream system's own types.
 
 ```
 types/cms/vehicle/vehicle-listing.types.ts
 types/cms/blog/blog-post.types.ts
+types/datendrehscheibe/vehicle/vehicle-inventory.types.ts
 types/vehicle/filter/vehicle-filter.types.ts
 ```
 
 ---
 
-# lib/cms/
+# lib/cms/ and lib/datendrehscheibe/
 
-The only place allowed to know Payload's REST shape (endpoints, query params, draft mode).
-Organized by domain, mirroring the domains used elsewhere.
+`lib/cms/` is the only place allowed to know Payload's REST shape (endpoints, query params,
+draft mode). `lib/datendrehscheibe/` is the only place allowed to know the Datendrehscheibe's
+HTTP API shape. Neither ever holds a database connection — both only ever speak HTTP. Each is
+organized by domain, mirroring the domains used elsewhere.
 
 ```
 lib/cms/vehicle/fetch-vehicle-listing.ts
 lib/cms/blog/fetch-blog-post.ts
+lib/datendrehscheibe/vehicle/fetch-vehicle-inventory.ts
 ```
 
 ---
@@ -100,6 +108,7 @@ colocated with source files.
 ```
 test/components/vehicle/listing/vehicle-listing-grid.test.tsx
 test/lib/cms/vehicle/fetch-vehicle-listing.test.ts
+test/lib/datendrehscheibe/vehicle/fetch-vehicle-inventory.test.ts
 ```
 
 ---

@@ -6,12 +6,22 @@ Security rules for the Website. Security always has priority over convenience.
 
 # Secrets
 
-- Server-only secrets (Payload API tokens, webhook secrets) MUST stay in server-only env vars
-  without the `NEXT_PUBLIC_` prefix, read only in Server Components, Server Actions, or Route
-  Handlers.
-- Never expose a Payload write-capable credential to the client bundle.
+- Server-only secrets (Payload API tokens, Datendrehscheibe API tokens, webhook secrets) MUST
+  stay in server-only env vars without the `NEXT_PUBLIC_` prefix, read only in Server
+  Components, Server Actions, or Route Handlers.
+- Never expose a Payload or Datendrehscheibe write-capable credential to the client bundle.
 - Only truly public values (a public API base URL, a public site URL) may use
   `NEXT_PUBLIC_`.
+
+# No Direct Database Access, Ever
+
+This repository MUST NEVER contain a database connection string, DB host/port/credential, or
+ORM client — not for Payload's database, not for the Datendrehscheibe's database, not for
+anything. Every upstream system is reached exclusively through its own HTTP API, and
+exclusively through its one dedicated client layer (`lib/cms/` for Payload,
+`lib/datendrehscheibe/` for the Datendrehscheibe — see `core/PROJECT_ARCHITECTURE.md`). If a
+task seems to need a direct database connection, that is a sign the task belongs in Payload
+or the Datendrehscheibe's own repository, not here — stop and ask.
 
 ---
 

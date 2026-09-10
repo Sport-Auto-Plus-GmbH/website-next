@@ -113,18 +113,28 @@ Everything application-specific lives under `src/`:
 - **`src/components/ui/`** — shadcn/ui primitives (generated, treated as infrastructure).
 - **`src/lib/cms/`** — the _only_ place allowed to call `payload-next`'s REST API. See
   `src/lib/cms/media/fetch-media-list.ts` for the pattern to follow.
-- **`src/types/cms/`** — Website-owned view types describing what we actually consume from
-  the CMS (not a copy of Payload's internal types).
+- **`src/lib/datendrehscheibe/`** — the _only_ place allowed to call the Datendrehscheibe's
+  HTTP API (not yet created — add it here, following the same pattern, when needed).
+- **`src/types/cms/`** / **`src/types/datendrehscheibe/`** — Website-owned view types
+  describing what we actually consume from each upstream system (never a copy of its
+  internal types).
 - **`.ai/`** — the engineering playbook. Read it before making non-trivial changes,
-  especially [`.ai/backend/CMS_CLIENT.md`](.ai/backend/CMS_CLIENT.md) before touching
-  anything that talks to the CMS.
+  especially [`.ai/backend/CMS_CLIENT.md`](.ai/backend/CMS_CLIENT.md) and
+  [`.ai/backend/DATENDREHSCHEIBE_CLIENT.md`](.ai/backend/DATENDREHSCHEIBE_CLIENT.md) before
+  touching anything that talks to an upstream system.
 
 Tests live under the root `test/` folder, mirroring the `src/` structure (never colocated
 with source files) — see `test/lib/cms/media/fetch-media-list.test.ts` for an example.
 
 ## Architecture in Short
 
-This app never talks to a database. It fetches everything from `payload-next` over HTTP,
-through `src/lib/cms/`, and maps the responses into its own view types. See
+This app never talks to a database — not for `payload-next`, not for the Datendrehscheibe,
+not for anything. It fetches everything over HTTP, through two dedicated client layers:
+
+- `src/lib/cms/` — the only place allowed to call `payload-next`'s REST API
+- `src/lib/datendrehscheibe/` — the only place allowed to call the Datendrehscheibe's HTTP
+  API (e.g. live vehicle inventory/pricing)
+
+Both map their responses into this app's own view types under `src/types/`. See
 [`.ai/core/PROJECT_ARCHITECTURE.md`](.ai/core/PROJECT_ARCHITECTURE.md) for the full picture —
-including where Zustand fits in (client-only UI state, never a cache for CMS data).
+including where Zustand fits in (client-only UI state, never a cache for upstream data).
