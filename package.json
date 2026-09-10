@@ -12,7 +12,7 @@
     "format:check": "prettier --check .",
     "typecheck": "next typegen && tsc --noEmit",
     "generate:datendrehscheibe-types": "openapi-typescript openapi/datendrehscheibe/api-vehicles-v1.0.yaml -o src/lib/datendrehscheibe/generated/vehicles.d.ts",
-    "sync:datendrehscheibe": "node ../Datendrehscheibe/tools/openapi-sync/sync.js --domain vehicles --dest openapi/datendrehscheibe && pnpm generate:datendrehscheibe-types",
+    "sync:datendrehscheibe": "node ../Datendrehscheibe/tools/openapi-sync/sync.js --domain vehicles --dest openapi/datendrehscheibe && pnpm generate:datendrehscheibe-types && pnpm format",
     "dev:sync-datendrehscheibe": "chokidar \"../Datendrehscheibe/de.saplus.datahub.api.http/src/main/openapi/**/*.yaml\" -c \"pnpm sync:datendrehscheibe\" --initial",
     "test": "vitest run",
     "test:watch": "vitest",
