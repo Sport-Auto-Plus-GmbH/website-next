@@ -83,6 +83,20 @@ types/datendrehscheibe/vehicle/vehicle-inventory.types.ts
 types/vehicle/filter/vehicle-filter.types.ts
 ```
 
+A CMS domain built from Payload content blocks (a `Page`'s `layout` field, or similar) MUST
+split each block into its own file rather than growing one file that defines every block:
+
+```
+types/cms/page/page.types.ts              Page + the PageBlock union only — no block fields
+types/cms/page/blocks/hero-teaser.types.ts  one block's shape, one file
+lib/cms/page/fetch-page-by-slug.ts        fetches + dispatches by blockType only
+lib/cms/page/blocks/hero-teaser.ts        that block's raw shape + its map*Block() function
+```
+
+`page.types.ts`/`fetch-page-by-slug.ts` (or the equivalent for another block-based domain)
+stay thin orchestration — the union type and the `blockType` dispatch `switch` — precisely so
+they don't become the one file every new block has to edit and grow forever.
+
 ---
 
 # lib/cms/ and lib/datendrehscheibe/

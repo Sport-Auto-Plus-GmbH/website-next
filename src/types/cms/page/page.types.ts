@@ -1,19 +1,6 @@
-export type FontSize = 'sm' | 'md' | 'lg' | 'xl' | '2xl'
+import type { HeroTeaserBlock } from './blocks/hero-teaser.types'
 
-export interface StyledText {
-  text: string
-  fontSize: FontSize
-  color: string
-}
-
-export interface HeroTeaserBlock {
-  id: string
-  blockType: 'heroTeaser'
-  headline: StyledText
-  subheadline: StyledText
-  description: StyledText
-}
-
+// Add each new block type to this union as it's added under blocks/.
 export type PageBlock = HeroTeaserBlock
 
 export interface Page {

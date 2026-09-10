@@ -1,25 +1,14 @@
 import { PAYLOAD_API_URL } from '@/lib/cms/config'
-import type { FontSize, Page, PageBlock, StyledText } from '@/types/cms/page/page.types'
+import type { Page, PageBlock } from '@/types/cms/page/page.types'
+
+import { mapHeroTeaserBlock, type PayloadHeroTeaserBlock } from './blocks/hero-teaser'
 
 interface PayloadListResponse<T> {
   docs: T[]
 }
 
-interface PayloadStyledTextGroup {
-  text?: string | null
-  fontSize?: string | null
-  color?: string | null
-}
-
-interface PayloadHeroTeaserBlock {
-  id: string
-  blockType: 'heroTeaser'
-  headline: PayloadStyledTextGroup
-  subheadline?: PayloadStyledTextGroup | null
-  description?: PayloadStyledTextGroup | null
-}
-
 // Payload can add a block type this Website doesn't render yet — see mapBlock below.
+// Add each new block's raw type to this union as it's added under blocks/.
 type PayloadPageBlock = PayloadHeroTeaserBlock | { id: string; blockType: string }
 
 interface PayloadPageDoc {
@@ -29,34 +18,10 @@ interface PayloadPageDoc {
   layout?: PayloadPageBlock[] | null
 }
 
-const VALID_FONT_SIZES: readonly FontSize[] = ['sm', 'md', 'lg', 'xl', '2xl']
-const DEFAULT_FONT_SIZE: FontSize = 'md'
-const DEFAULT_COLOR = '#323E48'
-
-function mapFontSize(value: string | null | undefined): FontSize {
-  return VALID_FONT_SIZES.includes(value as FontSize) ? (value as FontSize) : DEFAULT_FONT_SIZE
-}
-
-function mapStyledText(group: PayloadStyledTextGroup | null | undefined): StyledText {
-  return {
-    text: group?.text ?? '',
-    fontSize: mapFontSize(group?.fontSize),
-    color: group?.color ?? DEFAULT_COLOR,
-  }
-}
-
 function mapBlock(block: PayloadPageBlock): PageBlock | null {
   switch (block.blockType) {
-    case 'heroTeaser': {
-      const heroTeaser = block as PayloadHeroTeaserBlock
-      return {
-        id: heroTeaser.id,
-        blockType: 'heroTeaser',
-        headline: mapStyledText(heroTeaser.headline),
-        subheadline: mapStyledText(heroTeaser.subheadline),
-        description: mapStyledText(heroTeaser.description),
-      }
-    }
+    case 'heroTeaser':
+      return mapHeroTeaserBlock(block as PayloadHeroTeaserBlock)
     default:
       // Not yet supported on the Website — skip rather than crash the whole page.
       return null

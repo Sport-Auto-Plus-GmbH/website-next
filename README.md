@@ -157,17 +157,24 @@ editors added to the Payload page with slug **`home`** (`payload-next`'s `Pages`
 Renaming or deleting that page changes what `/` shows; there's no separate "is this the
 homepage" flag yet.
 
-- **`src/lib/cms/page/fetch-page-by-slug.ts`** fetches a page by slug and maps its `layout`
-  blocks into Website-owned types (`src/types/cms/page/page.types.ts`). Unrecognized block
-  types (a block payload-next added that this Website doesn't render yet) are skipped rather
-  than crashing the page — see `mapBlock`'s `switch`.
-- **`src/components/landing/<block>/`** — one component per block type, matching its
-  `blockType`. Currently: `hero-teaser/` for `heroTeaser` (headline/subheadline/description,
-  each with editor-controlled text, font size, and color).
-- Adding a second block type: add its shape to `page.types.ts`, a `case` in
-  `fetch-page-by-slug.ts`'s `mapBlock`, a new component under `components/landing/`, and a
-  `case` in `page.tsx`'s render switch — matching whatever block payload-next added under its
-  own `src/blocks/content/`.
+Each block gets its own file at every layer, one per `blockType` — never one growing file
+covering every block, since that only gets worse as more blocks are added:
+
+- **`src/types/cms/page/blocks/<block>.types.ts`** — the block's Website-owned shape (e.g.
+  `hero-teaser.types.ts`'s `HeroTeaserBlock`). `page.types.ts` itself only holds `Page` and
+  the `PageBlock` union of every block type — it doesn't define any block's fields directly.
+- **`src/lib/cms/page/blocks/<block>.ts`** — that block's raw Payload response shape and its
+  `map<Block>Block()` function. `fetch-page-by-slug.ts` itself only fetches, dispatches to
+  the right mapper by `blockType` in `mapBlock`'s `switch`, and skips a block type it doesn't
+  recognize (a block payload-next added that this Website doesn't render yet) rather than
+  crashing the page.
+- **`src/components/landing/<block>/`** — one rendering component per block type. Currently:
+  `hero-teaser/` for `heroTeaser` (headline/subheadline/description, each with
+  editor-controlled text, font size, and color).
+
+Adding a second block type: a new file in each of the three locations above, a `case` in
+`fetch-page-by-slug.ts`'s `mapBlock`, and a `case` in `page.tsx`'s render switch — matching
+whatever block payload-next added under its own `src/blocks/content/`.
 
 ## Datendrehscheibe API Types
 
