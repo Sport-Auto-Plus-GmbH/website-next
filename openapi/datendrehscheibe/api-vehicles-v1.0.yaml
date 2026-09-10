@@ -1,0 +1,581 @@
+---
+openapi: 3.1.1
+info:
+  title: Datahub Vehicles API
+  description: |-
+    This API contains endpoints for fetching Vehicles and related data from Datahub.
+  version: '1.0'
+servers:
+  - url: http://localhost:8080
+  - url: https://datahub-dev.sportautoplus.de
+  - url: https://datahub-staging.sportautoplus.de
+  - url: https://datahub.sportautoplus.de
+tags:
+  - name: vehicle
+paths:
+  '/api/vehicle/v1.0/vehicles':
+    get:
+      tags:
+        - vehicles
+      description: Retrieve all vehicles.
+      operationId: getVehicles
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VehicleGetResource'
+        default:
+          $ref: './common/error.yaml#/components/responses/default'
+  '/api/vehicle/v1.0/vehicles/{vehicleViewId}':
+    get:
+      tags:
+        - vehicles
+      description: Retrieves the vehicle by the given vehicleViewId
+      operationId: getVehicleDetailsByVehicleViewId
+      parameters:
+        - name: vehicleViewId
+          in: path
+          description: ID of the VehicleView
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VehicleGetResource'
+        '404':
+          $ref: './common/error.yaml#/components/responses/default'
+          description: No vehicle found for the given IDs
+        default:
+          $ref: './common/error.yaml#/components/responses/default'
+  '/api/vehicle/v1.0/vehicles/topOffer':
+    get:
+      tags:
+        - vehicles
+      description: Retrieve the Top-Offer Car
+      operationId: getTopOffer
+      responses:
+        '200':
+          description: Top-Offer found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VehicleGetResource'
+        '204':
+          description: No Top-Offer found
+        default:
+          $ref: './common/error.yaml#/components/responses/default'
+  '/api/vehicle/v1.0/vehicles/offers':
+    get:
+      tags:
+        - vehicles
+      description: Retrieve all vehicles-offers
+      operationId: getOffers
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VehicleGetResource'
+        default:
+          $ref: './common/error.yaml#/components/responses/default'
+  '/api/vehicle/v1.0/vehicles/filter':
+    get:
+      tags:
+        - vehicles
+      description: Retrieve all possible filterable values.
+      operationId: getFilter
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VehicleFilterResource'
+        default:
+          $ref: './common/error.yaml#/components/responses/default'
+
+  '/api/vehicle/v1.0/vehicles/brands':
+    get:
+      tags:
+        - vehicles
+      description: Retrieve all brands for which a configuration has ever existed, regardless of activation status.
+      operationId: getBrands
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BrandResource'
+        default:
+          $ref: './common/error.yaml#/components/responses/default'
+
+  '/api/vehicle/v1.0/vehicles/favorites':
+    get:
+      tags:
+        - vehicles
+      description: Retrieve favorite vehicles of the current user, including inactive vehicles.
+      security:
+        - bearerAuth: []
+      operationId: listFavorites
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VehicleGetResource'
+        default:
+          $ref: './common/error.yaml#/components/responses/default'
+
+  '/api/vehicle/v1.0/vehicles/favorites/{vehicleViewId}':
+    post:
+      tags:
+        - vehicles
+      description: Mark a vehicle as favorite for the current user.
+      security:
+        - bearerAuth: []
+      operationId: markFavorite
+      parameters:
+        - name: vehicleViewId
+          in: path
+          description: ID of the VehicleView
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Vehicle marked as favorite
+        '404':
+          $ref: './common/error.yaml#/components/responses/default'
+        default:
+          $ref: './common/error.yaml#/components/responses/default'
+    delete:
+      tags:
+        - vehicles
+      description: Unmark a vehicle as favorite for the current user.
+      security:
+        - bearerAuth: []
+      operationId: unmarkFavorite
+      parameters:
+        - name: vehicleViewId
+          in: path
+          description: ID of the VehicleView
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Vehicle unmarked as favorite
+        default:
+          $ref: './common/error.yaml#/components/responses/default'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      $ref: './common/security.yaml#/components/securitySchemes/bearerAuth'
+  schemas:
+    BrandResource:
+      type: object
+      properties:
+        label:
+          type: string
+          description: The brand value as stored in Datahub.
+          example: Audi
+        value:
+          type: string
+          description: URL-safe slug derived from the label.
+          example: audi
+
+    VehicleFilterResource:
+      type: object
+      properties:
+        brands:
+          type: array
+          items:
+            type: string
+          example: [Audi, Seat, Ford]
+        vehicleTypes:
+          type: array
+          items:
+            type: string
+          example: [SUV / Pickup, Kleinwagen, Sportwagen / Coupe]
+        fuelTypes:
+          type: array
+          items:
+            type: string
+          example: [Benzin-Hybrid, Benzin, Elektro]
+        transmissionTypes:
+          type: array
+          items:
+            type: string
+          example: [Automatik, Manuell]
+        tireTypes:
+          type: array
+          items:
+            type: string
+          example: [Sommerreifen, Winterreifen, Ganzjahresreifen]
+        deliveryLocations:
+          type: array
+          items:
+            type: string
+          example: [Bochum, Bonn, Köln, Berlin]
+        availableFromDates:
+          type: array
+          items:
+            type: string
+          example: ['08.2025', '09.2025', '10.2025', '11.2025']
+        availableUntilDates:
+          type: array
+          items:
+            type: string
+          example: ['08.2025', '09.2025', '10.2025', '11.2025']
+        termMonths:
+          type: array
+          items:
+            type: integer
+          example: [12, 18, 24]
+        amountSeats:
+          type: array
+          items:
+            type: integer
+          example: [2, 4, 6, 8]
+        shortTermAvailable:
+          type: boolean
+        trailerHitchAvailable:
+          type: boolean
+        labels:
+          type: array
+          items:
+            type: string
+          example: ['Highlight', 'Kurzfristig verfügbar', 'Premium']
+        mileage:
+          type: array
+          items:
+            type: integer
+          example: [20000, 30000, 40000]
+        driveType:
+          type: array
+          items:
+            type: string
+          example: ['Frontantrieb', 'Heckantrieb', 'Allrad']
+
+    VehicleGetResource:
+      type: object
+      properties:
+        vehicleViewId:
+          type: integer
+          format: int64
+          example: 10
+        brand:
+          type: string
+          example: Audi
+        carName:
+          type: string
+          example: S-Line
+        equipmentLine:
+          type: string
+          example: S-Line
+        labels:
+          type: array
+          items:
+            type: string
+          example: [Limitiert, kurzfristig verfügbar, Premium]
+        overviewPrice:
+          type: string
+          example:
+        drivetrain:
+          type: string
+          example:
+        # Konfiguration
+        location:
+          type: array
+          items:
+            type: string
+          example: [Bochum, Bonn, Köln, Berlin]
+        gearbox:
+          type: string
+          example: schalter
+        fuelType:
+          type: string
+          example: Benzin-Hybrid
+        mileage:
+          type: integer
+          example: 0
+        runtime:
+          type: string
+          example:
+        trailerHitchAvailable:
+          type: boolean
+          example:
+        # Kosten
+        subscriptionRate:
+          type: string
+          example:
+        excessMileageRateGross:
+          type: string
+          example:
+        additionalInfoExcessMileage:
+          type: string
+          example:
+        wasPrice:
+          type: string
+          example: 159.00
+        premium_deactivate:
+          type: boolean
+          example: false
+        premiumPlus_deactivate:
+          type: boolean
+          example: false
+        comprehensiveInsurance:
+          type: string
+          example:
+        fullyComprehensiveInsurance:
+          type: string
+          example:
+        # Fahrzeugdaten
+        engine:
+          type: string
+          example:
+        co2Class:
+          type: string
+          example:
+        co2Emissions:
+          type: string
+          example:
+        consumptionKwh:
+          type: string
+          example:
+        consumptionL:
+          type: string
+          example:
+        electricRange:
+          type: string
+          example:
+        batteryCapacity:
+          type: string
+          example:
+        horsepower:
+          type: integer
+          example:
+        vehicleType:
+          type: string
+          example: Kleinwagen
+        tireType:
+          type: string
+          example:
+        towingCapacityKg:
+          type: string
+          example:
+        towingCapacityUnit:
+          type: string
+          example:
+        seats:
+          type: integer
+          example: 4
+        doors:
+          type: integer
+          example:
+        driveType:
+          type: string
+          example: 'Frontantrieb'
+        mainImage:
+          type: string
+          description: URL to Hubspots CDN
+        images:
+          type: array
+          items:
+            type: string
+          example: '["URL-1 ..."; "URL-2 ..."]'
+        galleryMedia:
+          type: array
+          description: Ordered gallery media. Images and videos are already sorted for detail page rendering.
+          items:
+            $ref: '#/components/schemas/VehicleGalleryMediaResource'
+        androidAutoAppleCarplay:
+          type: boolean
+          example:
+        dabRadio:
+          type: boolean
+          example:
+        headUpDisplay:
+          type: boolean
+          example:
+        virtualCockpit:
+          type: boolean
+          example:
+        navigation:
+          type: boolean
+          example:
+        # Assistenzsysteme
+        parkingAssist:
+          type: boolean
+          example:
+        highBeamAssist:
+          type: boolean
+          example:
+        speedLimiter:
+          type: boolean
+          example:
+        blindSpotAssist:
+          type: boolean
+          example:
+        parkAssist:
+          type: boolean
+          example:
+        trafficSignRecognition:
+          type: boolean
+          example:
+        # Exterieur
+        panoramicRoof:
+          type: boolean
+          example:
+        sunroof:
+          type: boolean
+          example:
+        lights:
+          type: boolean
+          example:
+        # Komfort / Sicherheit / Technik
+        camera360:
+          type: boolean
+          example:
+        heatedWindshield:
+          type: boolean
+          example:
+        isofix:
+          type: boolean
+          example:
+        reversingCamera:
+          type: boolean
+          example:
+        seatHeating:
+          type: boolean
+          example:
+        keylessGo:
+          type: boolean
+          example:
+        luggageCompartmentPartition:
+          type: boolean
+          example:
+        additionalEquipment:
+          type: string
+          example:
+        # Energie
+        energyLabelTeaser:
+          type: string
+          example:
+        energyLabel: # URL
+          type: string
+          example:
+        # Verfügbarkeit & Zeitraum
+        availableFrom:
+          type: string
+          format: date
+          example: 2025-07-23
+        availableUntil:
+          type: string
+          format: date
+          example: 2025-09-29
+        isShortTermAvailable:
+          type: boolean
+          example:
+        deliveryDates:
+          type: array
+          items:
+            type: string
+        deliveryLocationsNote:
+          type: string
+          example:
+        returnLocationsNote:
+          type: string
+          example:
+        # Anzeige
+        ist_top_deal:
+          type: boolean
+        startseitenkaroussel:
+          type: boolean
+        aktiv:
+          type: boolean
+          description: Indicates whether the vehicle view is currently active.
+
+    VehicleGalleryMediaResource:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [image, video]
+        url:
+          type: string
+          description: URL to HubSpot's CDN.
+        thumbnailUrl:
+          type: string
+          description: Thumbnail URL. For images this is the image URL, for videos the matching video thumbnail or the first vehicle image.
+        mimeType:
+          type: string
+          nullable: true
+
+    HomepageVehicleInfoResource:
+      type: object
+      properties:
+        topDeal:
+          type: object
+          properties:
+            vehicleViewId:
+              type: string
+              example:
+            name:
+              type: string
+              example:
+            subscriptionRate:
+              type: string
+              example:
+        carousel:
+          type: array
+          items:
+            type: object
+            properties:
+              vehicleViewId:
+                type: string
+                example:
+              name:
+                type: string
+                example:
+              subscriptionRate:
+                type: string
+                example:
+              gearbox:
+                type: string
+                example:
+              fuelType:
+                type: string
+                example:
+              mileage:
+                type: string
+                example:
+              availableFrom:
+                type: string
+                format: date
+                example: 2025-07-23
+              availableUntil:
+                type: string
+                format: date
+                example: 2025-09-29

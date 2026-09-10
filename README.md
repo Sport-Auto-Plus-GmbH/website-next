@@ -46,8 +46,6 @@ Then fill in your own token (ask whoever manages the license) in place of
 token, `pnpm install` will fail to fetch the `@fortawesome/pro-*` packages. See
 [`.ai/frontend/ICONS.md`](.ai/frontend/ICONS.md) for usage rules.
 
-See [`.ai/frontend/ICONS.md`](.ai/frontend/ICONS.md) for usage rules once installed.
-
 ## What You Need Before You Start
 
 - **Node.js** (developed on Node 24). Check yours with `node -v`.
@@ -92,15 +90,16 @@ All commands below are run from inside this folder (`website-next/`).
 
 ## Everyday Commands
 
-| Command                     | What it does                                     |
-| --------------------------- | ------------------------------------------------ |
-| `pnpm dev`                  | Start the local dev server (port 3001)           |
-| `pnpm build` / `pnpm start` | Build for production / run that production build |
-| `pnpm lint`                 | Check the code for style/quality problems        |
-| `pnpm format`               | Auto-format the code                             |
-| `pnpm format:check`         | Check formatting without changing files          |
-| `pnpm test`                 | Run the test suite once                          |
-| `pnpm test:watch`           | Run tests in watch mode                          |
+| Command                                | What it does                                                     |
+| -------------------------------------- | ---------------------------------------------------------------- |
+| `pnpm dev`                             | Start the local dev server (port 3001)                           |
+| `pnpm build` / `pnpm start`            | Build for production / run that production build                 |
+| `pnpm lint`                            | Check the code for style/quality problems                        |
+| `pnpm format`                          | Auto-format the code                                             |
+| `pnpm format:check`                    | Check formatting without changing files                          |
+| `pnpm test`                            | Run the test suite once                                          |
+| `pnpm test:watch`                      | Run tests in watch mode                                          |
+| `pnpm generate:datendrehscheibe-types` | Regenerate types from the vendored Datendrehscheibe OpenAPI spec |
 
 A pre-commit hook (via Husky + lint-staged) automatically lints and formats the files you're
 committing.
@@ -114,7 +113,8 @@ Everything application-specific lives under `src/`:
 - **`src/lib/cms/`** — the _only_ place allowed to call `payload-next`'s REST API. See
   `src/lib/cms/media/fetch-media-list.ts` for the pattern to follow.
 - **`src/lib/datendrehscheibe/`** — the _only_ place allowed to call the Datendrehscheibe's
-  HTTP API (not yet created — add it here, following the same pattern, when needed).
+  HTTP API, via a typed client generated from its own OpenAPI spec (see
+  `openapi/datendrehscheibe/` and the "Datendrehscheibe API Types" section below).
 - **`src/types/cms/`** / **`src/types/datendrehscheibe/`** — Website-owned view types
   describing what we actually consume from each upstream system (never a copy of its
   internal types).
@@ -125,6 +125,24 @@ Everything application-specific lives under `src/`:
 
 Tests live under the root `test/` folder, mirroring the `src/` structure (never colocated
 with source files) — see `test/lib/cms/media/fetch-media-list.test.ts` for an example.
+
+## Datendrehscheibe API Types
+
+The Datendrehscheibe publishes real OpenAPI specs. Rather than hand-writing types for its
+responses, this project vendors the spec file(s) it actually uses and generates TypeScript
+types from them:
+
+```
+openapi/datendrehscheibe/api-vehicles-v1.0.yaml   vendored copy (+ its common/ refs)
+src/lib/datendrehscheibe/generated/vehicles.d.ts  generated — never hand-edit
+```
+
+If the Datendrehscheibe's API changes, update the vendored file(s) under
+`openapi/datendrehscheibe/` (if you have that repo checked out as a sibling folder, run
+`./scripts/sync-datendrehscheibe-openapi.sh`; otherwise ask a teammate for the current spec),
+then run `pnpm generate:datendrehscheibe-types`. See
+[`.ai/backend/DATENDREHSCHEIBE_CLIENT.md`](.ai/backend/DATENDREHSCHEIBE_CLIENT.md) for the
+full pattern, including how to add a second API domain later.
 
 ## Architecture in Short
 

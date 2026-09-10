@@ -11,6 +11,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "next typegen && tsc --noEmit",
+    "generate:datendrehscheibe-types": "openapi-typescript openapi/datendrehscheibe/api-vehicles-v1.0.yaml -o src/lib/datendrehscheibe/generated/vehicles.d.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "prepare": "husky"
@@ -33,6 +34,7 @@
     "class-variance-authority": "^0.7.1",
     "cn": "^0.2.6",
     "next": "16.3.4",
+    "openapi-fetch": "^0.17.0",
     "radix-ui": "^1.6.7",
     "react": "19.2.8",
     "react-dom": "19.2.8",
@@ -55,6 +57,7 @@
     "husky": "^9.1.7",
     "jsdom": "^30.0.1",
     "lint-staged": "^17.5.0",
+    "openapi-typescript": "^7.13.0",
     "prettier": "^3.9.6",
     "tailwindcss": "^4",
     "typescript": "^5",

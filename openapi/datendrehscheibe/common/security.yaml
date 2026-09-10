@@ -1,0 +1,16 @@
+---
+openapi: 3.1.1
+info:
+  title: Security Schema
+  description: This document defines the security scheme the API.
+  version: '1.0'
+security:
+  - bearerAuth: []
+paths: {}
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: 'JWT access token for authenticated user (Authorization: Bearer <token>)'
