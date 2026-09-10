@@ -20,7 +20,7 @@ this project follows.
 | Language            | [TypeScript](https://www.typescriptlang.org/)                    | 5.x     |
 | Styling             | [Tailwind CSS](https://tailwindcss.com/)                         | 4.x     |
 | UI components       | [shadcn/ui](https://ui.shadcn.com/) (Radix primitives)           | —       |
-| Icons               | FontAwesome Pro+ _(not yet installed — see below)_               | —       |
+| Icons               | FontAwesome Pro+ (licensed)                                      | 7.x     |
 | Client state        | [Zustand](https://zustand.docs.pmnd.rs/)                         | 5.0.15  |
 | Git hooks           | [Husky](https://typicode.github.io/husky/) + lint-staged         | 9.x     |
 | Formatting          | [Prettier](https://prettier.io/)                                 | 3.x     |
@@ -33,19 +33,18 @@ Required Node.js version: developed and tested on Node 24. Required pnpm version
 
 ### FontAwesome Pro+
 
-The project has a valid FontAwesome Pro+ license, but installing the Pro icon packages
-requires a private npm registry token this environment didn't have configured. Before adding
-any `@fortawesome/pro-*-svg-icons` package:
+The project has a valid FontAwesome Pro+ license, and the Pro icon packages are already
+installed (`pro-regular`, `pro-solid`, `pro-duotone`). Fetching them requires a private npm
+registry token, set per-developer in your own global `~/.npmrc` (never in this project's
+committed `.npmrc`, which only maps `@fortawesome` to FontAwesome's registry):
 
-1. Get the FontAwesome npm auth token (ask whoever manages the license).
-2. Add it to a local, **untracked** `.npmrc` (e.g. `.npmrc.local`, or your global pnpm config)
-   — never commit a token.
-3. Then install the packages you need (add other styles as needed):
+```
+//npm.fontawesome.com/:_authToken=YOUR_TOKEN_HERE
+```
 
-   ```bash
-   pnpm add @fortawesome/fontawesome-svg-core @fortawesome/react-fontawesome \
-     @fortawesome/pro-regular-svg-icons @fortawesome/pro-solid-svg-icons
-   ```
+Without it, `pnpm install` will fail to fetch the `@fortawesome/pro-*` packages. Ask whoever
+manages the license for the token. See [`.ai/frontend/ICONS.md`](.ai/frontend/ICONS.md) for
+usage rules.
 
 See [`.ai/frontend/ICONS.md`](.ai/frontend/ICONS.md) for usage rules once installed.
 

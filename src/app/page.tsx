@@ -1,3 +1,6 @@
+import { faArrowUpRight } from '@fortawesome/pro-regular-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+
 import { Button } from '@/components/ui/button'
 import { fetchMediaList } from '@/lib/cms/media/fetch-media-list'
 
@@ -18,6 +21,7 @@ export default async function HomePage() {
           rel="noreferrer"
         >
           Open CMS Admin
+          <FontAwesomeIcon icon={faArrowUpRight} className="ml-2 size-4" aria-hidden="true" />
         </a>
       </Button>
     </main>
