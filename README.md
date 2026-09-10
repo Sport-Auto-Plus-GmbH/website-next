@@ -137,18 +137,37 @@ openapi/datendrehscheibe/api-vehicles-v1.0.yaml   vendored copy (+ its common/ r
 src/lib/datendrehscheibe/generated/vehicles.d.ts  generated — never hand-edit
 ```
 
-If you have the Datendrehscheibe repo checked out as a sibling folder, `pnpm
-sync:datendrehscheibe` updates the vendored file(s) (via its own `tools/openapi-sync/` Node
-tool — this repo never hardcodes Datendrehscheibe's internal folder layout) and regenerates
-types in one step. Without that sibling checkout, ask a teammate for the current spec and
-copy it into `openapi/datendrehscheibe/` by hand, then run
-`pnpm generate:datendrehscheibe-types`.
+### When the Datendrehscheibe's API changes
 
-While developing locally with both repos checked out side by side, run
-`pnpm dev:sync-datendrehscheibe` in its own terminal to auto-sync whenever Datendrehscheibe's
-OpenAPI files change. See
-[`.ai/backend/DATENDREHSCHEIBE_CLIENT.md`](.ai/backend/DATENDREHSCHEIBE_CLIENT.md) for the
-full pattern, including how to add a second API domain later.
+Requires the Datendrehscheibe repo checked out as a sibling folder (`../Datendrehscheibe`,
+next to this repo) with its `tools/openapi-sync/` tool available (see its own README).
+
+1. Run one command:
+
+   ```bash
+   pnpm sync:datendrehscheibe
+   ```
+
+   This vendors the current spec, regenerates the TypeScript types, and formats the result —
+   all in one step. Plain `node`/`npm`/`pnpm` under the hood, no bash or PowerShell, so it
+   works the same on every OS.
+
+2. Review the diff in `openapi/datendrehscheibe/` and
+   `src/lib/datendrehscheibe/generated/vehicles.d.ts`.
+3. Run `pnpm typecheck` — if the change affects anything `lib/datendrehscheibe/` relies on,
+   this fails with clear errors pointing at exactly what to update.
+4. Fix any resulting code, commit the updated spec, generated types, and code fixes together.
+
+Without that sibling checkout, ask a teammate for the current spec, copy it into
+`openapi/datendrehscheibe/` by hand, then run `pnpm generate:datendrehscheibe-types` and
+`pnpm format`.
+
+**While actively developing across both repos**, run `pnpm dev:sync-datendrehscheibe` in its
+own terminal — it watches Datendrehscheibe's OpenAPI folder and re-runs the sync
+automatically on every change, so you never have to remember to do it by hand.
+
+See [`.ai/backend/DATENDREHSCHEIBE_CLIENT.md`](.ai/backend/DATENDREHSCHEIBE_CLIENT.md) for
+the full pattern, including how to add a second API domain later.
 
 ## Architecture in Short
 
