@@ -3,38 +3,38 @@ import { describe, expect, it, vi } from 'vitest'
 
 import HomePage from '@/app/page'
 
-vi.mock('@/lib/cms/media/fetch-media-list', () => ({
-  fetchMediaList: vi.fn().mockResolvedValue({ items: [], totalCount: 3 }),
-}))
+const { fetchPageBySlug } = vi.hoisted(() => ({ fetchPageBySlug: vi.fn() }))
 
-vi.mock('@/lib/cms/corporate-identity/fetch-corporate-identity', () => ({
-  fetchCorporateIdentity: vi.fn().mockResolvedValue({
-    colors: { primary: '#111111', secondary: '#222222', destructive: '#333333' },
-    logoUrl: '/cd/logo/sport-auto-plus-logo.svg',
-  }),
-}))
+vi.mock('@/lib/cms/page/fetch-page-by-slug', () => ({ fetchPageBySlug }))
 
 describe('HomePage', () => {
-  it('shows the media count fetched from the CMS', async () => {
+  it('renders the heroTeaser block of the "home" page', async () => {
+    fetchPageBySlug.mockResolvedValue({
+      id: 1,
+      title: 'Startseite',
+      slug: 'home',
+      blocks: [
+        {
+          id: 'block-1',
+          blockType: 'heroTeaser',
+          headline: { text: 'Ihr Traumauto wartet auf Sie', fontSize: 'xl', color: '#E94E1D' },
+          subheadline: { text: '', fontSize: 'md', color: '#323E48' },
+          description: { text: '', fontSize: 'md', color: '#323E48' },
+        },
+      ],
+    })
+
     render(await HomePage())
 
-    expect(screen.getByText(/3 media items found/)).toBeTruthy()
+    expect(screen.getByText('Ihr Traumauto wartet auf Sie')).toBeTruthy()
+    expect(fetchPageBySlug).toHaveBeenCalledWith('home')
   })
 
-  it('renders the logo from the corporate-identity global', async () => {
+  it('shows a fallback message when no "home" page exists yet', async () => {
+    fetchPageBySlug.mockResolvedValue(null)
+
     render(await HomePage())
 
-    expect(screen.getByAltText('Sport Auto Plus')).toHaveProperty(
-      'src',
-      expect.stringContaining('/cd/logo/sport-auto-plus-logo.svg'),
-    )
-  })
-
-  it('renders every shadcn Button variant', async () => {
-    render(await HomePage())
-
-    for (const variant of ['default', 'secondary', 'outline', 'ghost', 'destructive', 'link']) {
-      expect(screen.getByText(variant)).toBeTruthy()
-    }
+    expect(screen.getByText(/Keine Startseite konfiguriert/)).toBeTruthy()
   })
 })
