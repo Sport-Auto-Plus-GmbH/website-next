@@ -139,8 +139,18 @@ src/lib/datendrehscheibe/generated/vehicles.d.ts  generated — never hand-edit
 
 ### When the Datendrehscheibe's API changes
 
-Requires the Datendrehscheibe repo checked out as a sibling folder (`../Datendrehscheibe`,
-next to this repo) with its `tools/openapi-sync/` tool available (see its own README).
+Requires the Datendrehscheibe repo checked out as a **sibling folder** — next to this repo,
+under the same parent folder, not nested inside it:
+
+```
+<some-parent-folder>/
+├── website-next/         ← this repo
+└── Datendrehscheibe/     ← checked out right next to it
+```
+
+with its `tools/openapi-sync/` tool available (see its own README). `../Datendrehscheibe`
+means "go up one level from this repo, then into `Datendrehscheibe`" — if you keep it
+checked out somewhere else, or under a different folder name, this command won't find it.
 
 1. Run one command:
 
