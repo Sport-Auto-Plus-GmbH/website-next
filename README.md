@@ -11,26 +11,121 @@ If you're going to write code in this repository (including AI assistants), read
 [`.ai/README.md`](.ai/README.md) first — it defines the engineering rules and conventions
 this project follows.
 
-## Status
+## Tech Stack
 
-This repository currently only contains the AI engineering playbook (`.ai/`). The Next.js
-project itself has not been scaffolded yet — this README will be filled in with the tech
-stack, setup steps, and everyday commands once that happens.
+| Purpose             | Technology                                                       | Version |
+| ------------------- | ---------------------------------------------------------------- | ------- |
+| Framework           | [Next.js](https://nextjs.org/) (App Router, `src/` layout)       | 16.3.4  |
+| UI library          | [React](https://react.dev/)                                      | 19.2.8  |
+| Language            | [TypeScript](https://www.typescriptlang.org/)                    | 5.x     |
+| Styling             | [Tailwind CSS](https://tailwindcss.com/)                         | 4.x     |
+| UI components       | [shadcn/ui](https://ui.shadcn.com/) (Radix primitives)           | —       |
+| Icons               | FontAwesome Pro+ _(not yet installed — see below)_               | —       |
+| Client state        | [Zustand](https://zustand.docs.pmnd.rs/)                         | 5.0.15  |
+| Git hooks           | [Husky](https://typicode.github.io/husky/) + lint-staged         | 9.x     |
+| Formatting          | [Prettier](https://prettier.io/)                                 | 3.x     |
+| Linting             | [ESLint](https://eslint.org/) (`eslint-config-next`)             | 9.x     |
+| Testing             | [Vitest](https://vitest.dev/) + React Testing Library            | 5.x     |
+| Package manager     | [pnpm](https://pnpm.io/)                                         | 10.x    |
+| CMS (separate repo) | [Payload](https://payloadcms.com/) via `payload-next`'s REST API | —       |
 
-## Planned Tech Stack
+Required Node.js version: developed and tested on Node 24. Required pnpm version: `10.x`.
 
-| Purpose         | Technology                                                    |
-| ---------------- | ---------------------------------------------------------------- |
-| Framework          | [Next.js](https://nextjs.org/) (App Router)                        |
-| UI library         | [React](https://react.dev/)                                        |
-| Language            | [TypeScript](https://www.typescriptlang.org/)                       |
-| Styling             | [Tailwind CSS](https://tailwindcss.com/)                            |
-| UI components       | [shadcn/ui](https://ui.shadcn.com/)                                  |
-| Icons               | FontAwesome Pro+ (licensed)                                          |
-| Client state        | [Zustand](https://zustand.docs.pmnd.rs/)                             |
-| Git hooks           | [Husky](https://typicode.github.io/husky/)                          |
-| Formatting          | [Prettier](https://prettier.io/)                                     |
-| Testing             | [Vitest](https://vitest.dev/) + React Testing Library                |
-| CMS (separate repo) | [Payload](https://payloadcms.com/) via `payload-next`'s REST API      |
+### FontAwesome Pro+
 
-Exact versions will be added here once the project is scaffolded and dependencies are pinned.
+The project has a valid FontAwesome Pro+ license, but installing the Pro icon packages
+requires a private npm registry token this environment didn't have configured. Before adding
+any `@fortawesome/pro-*-svg-icons` package:
+
+1. Get the FontAwesome npm auth token (ask whoever manages the license).
+2. Add it to a local, **untracked** `.npmrc` (e.g. `.npmrc.local`, or your global pnpm config)
+   — never commit a token.
+3. Then install the packages you need (add other styles as needed):
+
+   ```bash
+   pnpm add @fortawesome/fontawesome-svg-core @fortawesome/react-fontawesome \
+     @fortawesome/pro-regular-svg-icons @fortawesome/pro-solid-svg-icons
+   ```
+
+See [`.ai/frontend/ICONS.md`](.ai/frontend/ICONS.md) for usage rules once installed.
+
+## What You Need Before You Start
+
+- **Node.js** (developed on Node 24). Check yours with `node -v`.
+- **pnpm** — install it once with `corepack enable` (ships with Node), or see
+  [pnpm's install docs](https://pnpm.io/installation).
+- **The `payload-next` CMS running locally** (see its own README) — this website has nothing
+  to show without it. By default it's expected at `http://localhost:3000`.
+
+## Setting Up the Project (Step by Step)
+
+All commands below are run from inside this folder (`website-next/`).
+
+1. **Copy the environment file:**
+
+   ```bash
+   cp .env.example .env
+   ```
+
+   The default `PAYLOAD_API_URL` already points at `payload-next` running locally on its
+   default port. Change it only if you're running the CMS somewhere else.
+
+2. **Install dependencies:**
+
+   ```bash
+   pnpm install
+   ```
+
+3. **Make sure `payload-next` is running** (in its own terminal / folder — see its README).
+
+4. **Start the dev server:**
+
+   ```bash
+   pnpm dev
+   ```
+
+   Open [http://localhost:3001](http://localhost:3001) — note the port: **3001**, not 3000,
+   so it doesn't clash with `payload-next` running on 3000 at the same time.
+
+   You should see a page confirming it successfully fetched data from the CMS (a media item
+   count). If it errors instead, double-check `payload-next` is actually running and
+   reachable at the URL in your `.env`.
+
+## Everyday Commands
+
+| Command                     | What it does                                     |
+| --------------------------- | ------------------------------------------------ |
+| `pnpm dev`                  | Start the local dev server (port 3001)           |
+| `pnpm build` / `pnpm start` | Build for production / run that production build |
+| `pnpm lint`                 | Check the code for style/quality problems        |
+| `pnpm format`               | Auto-format the code                             |
+| `pnpm format:check`         | Check formatting without changing files          |
+| `pnpm test`                 | Run the test suite once                          |
+| `pnpm test:watch`           | Run tests in watch mode                          |
+
+A pre-commit hook (via Husky + lint-staged) automatically lints and formats the files you're
+committing.
+
+## How the Project Is Organized
+
+Everything application-specific lives under `src/`:
+
+- **`src/app/`** — Next.js App Router pages, layouts, route handlers.
+- **`src/components/ui/`** — shadcn/ui primitives (generated, treated as infrastructure).
+- **`src/lib/cms/`** — the _only_ place allowed to call `payload-next`'s REST API. See
+  `src/lib/cms/media/fetch-media-list.ts` for the pattern to follow.
+- **`src/types/cms/`** — Website-owned view types describing what we actually consume from
+  the CMS (not a copy of Payload's internal types).
+- **`.ai/`** — the engineering playbook. Read it before making non-trivial changes,
+  especially [`.ai/backend/CMS_CLIENT.md`](.ai/backend/CMS_CLIENT.md) before touching
+  anything that talks to the CMS.
+
+Tests live under the root `test/` folder, mirroring the `src/` structure (never colocated
+with source files) — see `test/lib/cms/media/fetch-media-list.test.ts` for an example.
+
+## Architecture in Short
+
+This app never talks to a database. It fetches everything from `payload-next` over HTTP,
+through `src/lib/cms/`, and maps the responses into its own view types. See
+[`.ai/core/PROJECT_ARCHITECTURE.md`](.ai/core/PROJECT_ARCHITECTURE.md) for the full picture —
+including where Zustand fits in (client-only UI state, never a cache for CMS data).
