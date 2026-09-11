@@ -1,9 +1,16 @@
 import { NextRequest } from 'next/server'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-const { fetchVehicleDetail } = vi.hoisted(() => ({ fetchVehicleDetail: vi.fn() }))
+const { fetchVehicleDetail, sharp, webp, resize } = vi.hoisted(() => {
+  const toBuffer = vi.fn().mockResolvedValue(Buffer.from('resized-webp-bytes'))
+  const webp = vi.fn().mockReturnValue({ toBuffer })
+  const resize = vi.fn().mockReturnValue({ webp })
+  const sharp = vi.fn().mockReturnValue({ resize })
+  return { fetchVehicleDetail: vi.fn(), sharp, webp, resize }
+})
 
 vi.mock('@/lib/datendrehscheibe/vehicle/fetch-vehicle-detail', () => ({ fetchVehicleDetail }))
+vi.mock('sharp', () => ({ default: sharp }))
 
 import { GET } from '@/app/api/vehicles/[vehicleViewId]/image/route'
 
@@ -115,5 +122,39 @@ describe('GET /api/vehicles/[vehicleViewId]/image', () => {
     )
 
     expect(response.status).toBe(404)
+  })
+
+  it("resizes and re-encodes to WebP when ?w= is given (next/image's custom loader)", async () => {
+    fetchVehicleDetail.mockResolvedValue(vehicle)
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('original-bytes')))
+
+    const response = await GET(
+      buildRequest('http://localhost/api/vehicles/10/image?w=640&q=60'),
+      buildContext('10'),
+    )
+
+    expect(response.status).toBe(200)
+    expect(response.headers.get('content-type')).toBe('image/webp')
+    expect(await response.text()).toBe('resized-webp-bytes')
+    expect(resize).toHaveBeenCalledWith({ width: 640, withoutEnlargement: true })
+    expect(webp).toHaveBeenCalledWith({ quality: 60 })
+  })
+
+  it('clamps an oversized ?w= to the maximum width', async () => {
+    fetchVehicleDetail.mockResolvedValue(vehicle)
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('original-bytes')))
+
+    await GET(buildRequest('http://localhost/api/vehicles/10/image?w=999999'), buildContext('10'))
+
+    expect(resize).toHaveBeenCalledWith({ width: 3840, withoutEnlargement: true })
+  })
+
+  it('falls back to the default quality for an out-of-range ?q=', async () => {
+    fetchVehicleDetail.mockResolvedValue(vehicle)
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('original-bytes')))
+
+    await GET(buildRequest('http://localhost/api/vehicles/10/image?w=640&q=0'), buildContext('10'))
+
+    expect(webp).toHaveBeenCalledWith({ quality: 75 })
   })
 })

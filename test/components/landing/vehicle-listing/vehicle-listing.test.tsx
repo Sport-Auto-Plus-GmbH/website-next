@@ -86,7 +86,9 @@ describe('VehicleListing', () => {
     )
 
     const image = screen.getByRole('img', { name: 'BMW 320d' })
-    expect(image.getAttribute('src')).toContain(encodeURIComponent('/api/vehicles/1/image'))
+    // The custom loader (vehicle-photo-loader.ts) keeps this a short, direct, same-origin
+    // URL — never wrapped in next/image's default /_next/image?url=<encoded>&... form.
+    expect(image.getAttribute('src')).toMatch(/^\/api\/vehicles\/1\/image\?w=\d+&q=\d+$/)
     expect(image.getAttribute('src')).not.toContain('cdn.example.com')
   })
 

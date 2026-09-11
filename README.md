@@ -275,10 +275,23 @@ vehicle/`) — Payload and the Datendrehscheibe are independent APIs, fetched se
   never touch `vehicle.mainImage`/`vehicle.images` directly as an `<Image src>`. Because the
   `src` next/image sees is always a relative, same-origin path, `next.config.ts` needs no
   HubSpot entry in `images.remotePatterns` at all — only the local Payload media pattern
-  remains. The proxy route's own `Cache-Control` matches `fetchVehicleDetail`'s 300s revalidate
-  window. The old Angular project never optimized, proxied, or hid these images at all (plain
-  `<img>` straight to the CDN, no allowlist anywhere in that codebase) — there's no precedent
-  to preserve here.
+  remains.
+  - **`src/lib/vehicle/vehicle-photo-loader.ts`** is a custom next/image `loader` for these
+    photos: instead of the default `/_next/image?url=<encoded>&w=...&q=...` wrapper, it
+    appends `?w=`/`?q=` straight onto the proxy route's own URL (`/api/vehicles/10/image?w=
+640&q=75`) — shorter, and next/image's own `/_next/image` optimizer never runs for these
+    URLs at all. The proxy route does the actual resize itself (`sharp`, converting to WebP),
+    clamping `w`/`q` to sane bounds since they're client-supplied.
+  - A `loader` prop only works from a Client Component (next/image's own requirement), so
+    **`src/components/vehicle/vehicle-photo/vehicle-photo.tsx`** is a small `'use client'`
+    wrapper around `<Image loader={vehiclePhotoLoader} .../>` — this keeps the listing block
+    and the detail page themselves Server Components (see `NEXTJS.md`'s "Server Components by
+    Default"); only this one leaf component needs to be a Client Component.
+  - The proxy route's own `Cache-Control` matches `fetchVehicleDetail`'s 300s revalidate
+    window.
+  - The old Angular project never optimized, proxied, or hid these images at all (plain
+    `<img>` straight to the CDN, no allowlist anywhere in that codebase) — there's no
+    precedent to preserve here.
 - Without Datendrehscheibe running, a page with a `vehicleListing` block throws (matches this
   project's existing, documented behavior for any infrastructure failure — see
   `.ai/quality/ERROR_HANDLING.md` — not something new introduced by this feature).

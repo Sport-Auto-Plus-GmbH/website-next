@@ -65,13 +65,15 @@ describe('VehicleDetailPage', () => {
     expect(screen.queryByText('Panoramadach')).not.toBeInTheDocument()
     expect(fetchVehicleDetail).toHaveBeenCalledWith(10)
 
-    // Photos are proxied through this Website's own API route, never the raw
-    // upstream (Datendrehscheibe/HubSpot) URL — see vehicle-photo-url.ts.
+    // Photos are proxied through this Website's own API route, never the raw upstream
+    // (Datendrehscheibe/HubSpot) URL — see vehicle-photo-url.ts/vehicle-photo-loader.ts.
+    // The custom loader also keeps this a short, direct URL, never next/image's default
+    // /_next/image?url=<encoded>&... wrapper.
     const images = screen.getAllByRole('img', { name: 'BMW 320d' })
     for (const image of images) {
       expect(image.getAttribute('src')).not.toContain('cdn.example.com')
     }
-    expect(images[0].getAttribute('src')).toContain(encodeURIComponent('/api/vehicles/10/image'))
+    expect(images[0].getAttribute('src')).toMatch(/^\/api\/vehicles\/10\/image\?w=\d+&q=\d+$/)
   })
 
   it('calls notFound() for a non-numeric id without fetching', async () => {

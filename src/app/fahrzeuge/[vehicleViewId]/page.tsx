@@ -1,9 +1,8 @@
-import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
+import { VehiclePhoto } from '@/components/vehicle/vehicle-photo/vehicle-photo'
 import { fetchVehicleDetail } from '@/lib/datendrehscheibe/vehicle/fetch-vehicle-detail'
-import { vehiclePhotoUrl } from '@/lib/vehicle/vehicle-photo-url'
 
 const EQUIPMENT_LABELS: Record<string, string> = {
   navigation: 'Navigation',
@@ -38,8 +37,8 @@ export default async function VehicleDetailPage(props: PageProps<'/fahrzeuge/[ve
       </Link>
 
       {vehicle.mainImage && (
-        <Image
-          src={vehiclePhotoUrl(vehicle.id)}
+        <VehiclePhoto
+          vehicleViewId={vehicle.id}
           alt={`${vehicle.brand} ${vehicle.carName}`}
           width={1024}
           height={576}
@@ -154,9 +153,10 @@ export default async function VehicleDetailPage(props: PageProps<'/fahrzeuge/[ve
           <h2 className="font-heading text-xl">Bilder</h2>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
             {vehicle.images.map((_image, index) => (
-              <Image
+              <VehiclePhoto
                 key={index}
-                src={vehiclePhotoUrl(vehicle.id, index)}
+                vehicleViewId={vehicle.id}
+                index={index}
                 alt={`${vehicle.brand} ${vehicle.carName}`}
                 width={480}
                 height={270}
