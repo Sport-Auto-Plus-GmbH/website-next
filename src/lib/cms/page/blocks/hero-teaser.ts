@@ -1,38 +1,17 @@
-import type {
-  FontSize,
-  HeroTeaserBlock,
-  StyledText,
-} from '@/types/cms/page/blocks/hero-teaser.types'
+import { z } from 'zod'
 
-export interface PayloadStyledTextGroup {
-  text?: string | null
-  fontSize?: string | null
-  color?: string | null
-}
+import { mapStyledText, payloadStyledTextGroupSchema } from '@/lib/cms/page/blocks/styled-text'
+import type { HeroTeaserBlock } from '@/types/cms/page/blocks/hero-teaser.types'
 
-export interface PayloadHeroTeaserBlock {
-  id: string
-  blockType: 'heroTeaser'
-  headline: PayloadStyledTextGroup
-  subheadline?: PayloadStyledTextGroup | null
-  description?: PayloadStyledTextGroup | null
-}
+export const payloadHeroTeaserBlockSchema = z.object({
+  id: z.string(),
+  blockType: z.literal('heroTeaser'),
+  headline: payloadStyledTextGroupSchema,
+  subheadline: payloadStyledTextGroupSchema.nullish(),
+  description: payloadStyledTextGroupSchema.nullish(),
+})
 
-const VALID_FONT_SIZES: readonly FontSize[] = ['sm', 'md', 'lg', 'xl', '2xl']
-const DEFAULT_FONT_SIZE: FontSize = 'md'
-const DEFAULT_COLOR = '#323E48'
-
-function mapFontSize(value: string | null | undefined): FontSize {
-  return VALID_FONT_SIZES.includes(value as FontSize) ? (value as FontSize) : DEFAULT_FONT_SIZE
-}
-
-function mapStyledText(group: PayloadStyledTextGroup | null | undefined): StyledText {
-  return {
-    text: group?.text ?? '',
-    fontSize: mapFontSize(group?.fontSize),
-    color: group?.color ?? DEFAULT_COLOR,
-  }
-}
+export type PayloadHeroTeaserBlock = z.infer<typeof payloadHeroTeaserBlockSchema>
 
 export function mapHeroTeaserBlock(block: PayloadHeroTeaserBlock): HeroTeaserBlock {
   return {

@@ -1,3 +1,5 @@
+import { z } from 'zod'
+
 import { PAYLOAD_PUBLIC_URL } from '@/lib/cms/config'
 import type {
   HeadingTag,
@@ -44,36 +46,56 @@ const RGB_COLOR_PATTERN =
   /^rgba?\((?:\s*\d{1,3}%?\s*,){2}\s*\d{1,3}%?(?:\s*,\s*(?:0|1|0?\.\d+))?\s*\)$/
 const CSS_LENGTH_PATTERN = /^(?:0|\d+(?:\.\d+)?(?:px|rem|em|vw|vh|%)|clamp\([^;{}<>]+\))$/
 
-interface PayloadMedia {
-  alt?: string | null
-  mimeType?: string | null
-  sourceType?: string | null
-  url?: string | null
-  youtubeUrl?: string | null
-}
+const payloadMediaSchema = z
+  .object({
+    alt: z.string().nullish(),
+    mimeType: z.string().nullish(),
+    sourceType: z.string().nullish(),
+    url: z.string().nullish(),
+    youtubeUrl: z.string().nullish(),
+  })
+  .passthrough()
 
-interface PayloadHeading {
-  color?: string | null
-  fontSize?: string | null
-  tag?: string | null
-  text?: string | null
-}
+const payloadHeadingSchema = z.object({
+  color: z.string().nullish(),
+  fontSize: z.string().nullish(),
+  tag: z.string().nullish(),
+  text: z.string().nullish(),
+})
 
-interface PayloadVideoTeaserBlock {
-  blockType: 'videoTeaser'
-  design?: Partial<Record<keyof VideoTeaserDesign, string | null>> | null
-  durationLabel?: string | null
-  headline?: PayloadHeading | null
-  id: string
-  subheadline?: PayloadHeading | null
-  teaserMedia?: PayloadMedia | number | null
-  videoMedia?: PayloadMedia | number | null
-  youtube?: {
-    consentButtonLabel?: string | null
-    consentRequired?: boolean | null
-    consentText?: string | null
-  } | null
-}
+type PayloadHeading = z.infer<typeof payloadHeadingSchema>
+
+export const payloadVideoTeaserBlockSchema = z.object({
+  blockType: z.literal('videoTeaser'),
+  design: z
+    .object({
+      overlayColor: z.string().nullish(),
+      playButtonBackgroundColor: z.string().nullish(),
+      playButtonTextColor: z.string().nullish(),
+      playButtonRadius: z.string().nullish(),
+      lightboxBackdropColor: z.string().nullish(),
+      lightboxFrameColor: z.string().nullish(),
+      lightboxFrameWidth: z.string().nullish(),
+      lightboxMaxWidth: z.string().nullish(),
+      lightboxRadius: z.string().nullish(),
+    })
+    .nullish(),
+  durationLabel: z.string().nullish(),
+  headline: payloadHeadingSchema.nullish(),
+  id: z.string(),
+  subheadline: payloadHeadingSchema.nullish(),
+  teaserMedia: payloadMediaSchema.nullish(),
+  videoMedia: payloadMediaSchema.nullish(),
+  youtube: z
+    .object({
+      consentButtonLabel: z.string().nullish(),
+      consentRequired: z.boolean().nullish(),
+      consentText: z.string().nullish(),
+    })
+    .nullish(),
+})
+
+export type PayloadVideoTeaserBlock = z.infer<typeof payloadVideoTeaserBlockSchema>
 
 function asText(value: unknown, fallback = ''): string {
   return typeof value === 'string' && value.trim() ? value.trim() : fallback
@@ -234,5 +256,3 @@ export function mapVideoTeaserBlock(
     youtubeConsent: mapYouTubeConsent(block.youtube, defaults.youtube),
   }
 }
-
-export type { PayloadVideoTeaserBlock }

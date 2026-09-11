@@ -24,21 +24,22 @@ const initialRawPage: PayloadPageDoc = {
       headline: { text: 'Ihr Traumauto wartet auf Sie', fontSize: 'xl', color: '#E94E1D' },
       subheadline: { text: '', fontSize: 'md', color: '#323E48' },
       description: { text: '', fontSize: 'md', color: '#323E48' },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- minimal raw block fixture, only the mapped fields matter here
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- minimal raw block fixture
     } as any,
   ],
+}
+
+const defaultProps = {
+  initialRawPage,
+  vehicles: [],
+  videoTeaserDefaults: DEFAULT_VIDEO_TEASER_DEFAULTS,
 }
 
 describe('PageRenderer', () => {
   it('renders the initial page before any live-preview update arrives', () => {
     useLivePreview.mockReturnValue({ data: initialRawPage, isLoading: true })
 
-    render(
-      <PageRenderer
-        initialRawPage={initialRawPage}
-        videoTeaserDefaults={DEFAULT_VIDEO_TEASER_DEFAULTS}
-      />,
-    )
+    render(<PageRenderer {...defaultProps} />)
 
     expect(screen.getByText('Ihr Traumauto wartet auf Sie')).toBeTruthy()
     expect(useLivePreview).toHaveBeenCalledWith(
@@ -53,19 +54,70 @@ describe('PageRenderer', () => {
         {
           ...(initialRawPage.layout![0] as object),
           headline: { text: 'Live editierte Headline', fontSize: 'xl', color: '#E94E1D' },
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- minimal raw block fixture, only the mapped fields matter here
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- minimal raw block fixture
         } as any,
       ],
     }
     useLivePreview.mockReturnValue({ data: updatedRawPage, isLoading: false })
 
+    render(<PageRenderer {...defaultProps} />)
+
+    expect(screen.getByText('Live editierte Headline')).toBeTruthy()
+  })
+
+  it('renders a vehicleListing block, slicing the pre-fetched vehicles to maxItems', () => {
+    const pageWithVehicleListing: PayloadPageDoc = {
+      id: 2,
+      title: 'Fahrzeuge',
+      slug: 'fahrzeuge',
+      layout: [
+        {
+          id: 'block-2',
+          blockType: 'vehicleListing',
+          heading: { text: 'Unsere Fahrzeuge', fontSize: 'lg', color: '#323E48' },
+          subheading: { text: '', fontSize: 'md', color: '#323E48' },
+          maxItems: 1,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- minimal raw block fixture
+        } as any,
+      ],
+    }
+    useLivePreview.mockReturnValue({ data: pageWithVehicleListing, isLoading: false })
+
     render(
       <PageRenderer
-        initialRawPage={initialRawPage}
-        videoTeaserDefaults={DEFAULT_VIDEO_TEASER_DEFAULTS}
+        {...defaultProps}
+        initialRawPage={pageWithVehicleListing}
+        vehicles={[
+          {
+            id: 1,
+            brand: 'BMW',
+            carName: '320d',
+            equipmentLine: null,
+            mainImage: null,
+            overviewPrice: null,
+            mileage: null,
+            fuelType: null,
+            gearbox: null,
+            vehicleType: null,
+          },
+          {
+            id: 2,
+            brand: 'Audi',
+            carName: 'A4',
+            equipmentLine: null,
+            mainImage: null,
+            overviewPrice: null,
+            mileage: null,
+            fuelType: null,
+            gearbox: null,
+            vehicleType: null,
+          },
+        ]}
       />,
     )
 
-    expect(screen.getByText('Live editierte Headline')).toBeTruthy()
+    expect(screen.getByText('Unsere Fahrzeuge')).toBeTruthy()
+    expect(screen.getByText('BMW 320d')).toBeTruthy()
+    expect(screen.queryByText('Audi A4')).not.toBeInTheDocument()
   })
 })
