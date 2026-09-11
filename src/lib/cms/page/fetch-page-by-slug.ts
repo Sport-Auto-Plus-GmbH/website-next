@@ -1,7 +1,10 @@
 import { PAYLOAD_API_URL } from '@/lib/cms/config'
+import { fetchCorporateIdentity } from '@/lib/cms/corporate-identity/fetch-corporate-identity'
 import type { Page, PageBlock } from '@/types/cms/page/page.types'
+import type { VideoTeaserDefaults } from '@/types/cms/page/blocks/video-teaser.types'
 
 import { mapHeroTeaserBlock, type PayloadHeroTeaserBlock } from './blocks/hero-teaser'
+import { mapVideoTeaserBlock, type PayloadVideoTeaserBlock } from './blocks/video-teaser'
 
 interface PayloadListResponse<T> {
   docs: T[]
@@ -9,7 +12,8 @@ interface PayloadListResponse<T> {
 
 // Payload can add a block type this Website doesn't render yet — see mapBlock below.
 // Add each new block's raw type to this union as it's added under blocks/.
-type PayloadPageBlock = PayloadHeroTeaserBlock | { id: string; blockType: string }
+type PayloadPageBlock =
+  PayloadHeroTeaserBlock | PayloadVideoTeaserBlock | { id: string; blockType: string }
 
 // Exported so the Live Preview client wrapper (components/landing/page-renderer/) can
 // type the raw postMessage payload it receives — see mapPage below for why it also
@@ -21,10 +25,15 @@ export interface PayloadPageDoc {
   layout?: PayloadPageBlock[] | null
 }
 
-function mapBlock(block: PayloadPageBlock): PageBlock | null {
+function mapBlock(
+  block: PayloadPageBlock,
+  videoTeaserDefaults?: VideoTeaserDefaults,
+): PageBlock | null {
   switch (block.blockType) {
     case 'heroTeaser':
       return mapHeroTeaserBlock(block as PayloadHeroTeaserBlock)
+    case 'videoTeaser':
+      return mapVideoTeaserBlock(block as PayloadVideoTeaserBlock, videoTeaserDefaults)
     default:
       // Not yet supported on the Website — skip rather than crash the whole page.
       return null
@@ -38,12 +47,14 @@ function mapBlock(block: PayloadPageBlock): PageBlock | null {
  * sent via postMessage) — the client wrapper re-runs this same mapper on every
  * live update rather than duplicating the mapping logic.
  */
-export function mapPage(doc: PayloadPageDoc): Page {
+export function mapPage(doc: PayloadPageDoc, videoTeaserDefaults?: VideoTeaserDefaults): Page {
   return {
     id: doc.id,
     title: doc.title,
     slug: doc.slug,
-    blocks: (doc.layout ?? []).map(mapBlock).filter((block): block is PageBlock => block !== null),
+    blocks: (doc.layout ?? [])
+      .map((block) => mapBlock(block, videoTeaserDefaults))
+      .filter((block): block is PageBlock => block !== null),
   }
 }
 
@@ -54,7 +65,7 @@ export function mapPage(doc: PayloadPageDoc): Page {
  */
 export async function fetchRawPageBySlug(slug: string): Promise<PayloadPageDoc | null> {
   const response = await fetch(
-    `${PAYLOAD_API_URL}/api/pages?where[slug][equals]=${encodeURIComponent(slug)}&limit=1`,
+    `${PAYLOAD_API_URL}/api/pages?where[slug][equals]=${encodeURIComponent(slug)}&depth=2&limit=1`,
     { next: { revalidate: 3600, tags: [`page:${slug}`] } },
   )
 
@@ -72,5 +83,10 @@ export async function fetchRawPageBySlug(slug: string): Promise<PayloadPageDoc |
  */
 export async function fetchPageBySlug(slug: string): Promise<Page | null> {
   const doc = await fetchRawPageBySlug(slug)
-  return doc ? mapPage(doc) : null
+  if (!doc) {
+    return null
+  }
+
+  const corporateIdentity = await fetchCorporateIdentity()
+  return doc ? mapPage(doc, corporateIdentity.videoTeaser) : null
 }

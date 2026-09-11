@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 
 import { PageRenderer } from '@/components/landing/page-renderer/page-renderer'
+import { DEFAULT_VIDEO_TEASER_DEFAULTS } from '@/lib/cms/page/blocks/video-teaser'
 import type { PayloadPageDoc } from '@/lib/cms/page/fetch-page-by-slug'
 
 const { useLivePreview } = vi.hoisted(() => ({ useLivePreview: vi.fn() }))
@@ -32,9 +33,17 @@ describe('PageRenderer', () => {
   it('renders the initial page before any live-preview update arrives', () => {
     useLivePreview.mockReturnValue({ data: initialRawPage, isLoading: true })
 
-    render(<PageRenderer initialRawPage={initialRawPage} />)
+    render(
+      <PageRenderer
+        initialRawPage={initialRawPage}
+        videoTeaserDefaults={DEFAULT_VIDEO_TEASER_DEFAULTS}
+      />,
+    )
 
     expect(screen.getByText('Ihr Traumauto wartet auf Sie')).toBeTruthy()
+    expect(useLivePreview).toHaveBeenCalledWith(
+      expect.objectContaining({ depth: 2, initialData: initialRawPage }),
+    )
   })
 
   it('re-renders with the live-preview data once an update arrives', () => {
@@ -50,7 +59,12 @@ describe('PageRenderer', () => {
     }
     useLivePreview.mockReturnValue({ data: updatedRawPage, isLoading: false })
 
-    render(<PageRenderer initialRawPage={initialRawPage} />)
+    render(
+      <PageRenderer
+        initialRawPage={initialRawPage}
+        videoTeaserDefaults={DEFAULT_VIDEO_TEASER_DEFAULTS}
+      />,
+    )
 
     expect(screen.getByText('Live editierte Headline')).toBeTruthy()
   })

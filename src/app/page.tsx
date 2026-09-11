@@ -1,10 +1,14 @@
 import { PageRenderer } from '@/components/landing/page-renderer/page-renderer'
+import { fetchCorporateIdentity } from '@/lib/cms/corporate-identity/fetch-corporate-identity'
 import { fetchRawPageBySlug } from '@/lib/cms/page/fetch-page-by-slug'
 
 const HOMEPAGE_SLUG = 'home'
 
 export default async function HomePage() {
-  const rawPage = await fetchRawPageBySlug(HOMEPAGE_SLUG)
+  const [rawPage, corporateIdentity] = await Promise.all([
+    fetchRawPageBySlug(HOMEPAGE_SLUG),
+    fetchCorporateIdentity(),
+  ])
 
   if (!rawPage) {
     return (
@@ -17,5 +21,7 @@ export default async function HomePage() {
     )
   }
 
-  return <PageRenderer initialRawPage={rawPage} />
+  return (
+    <PageRenderer initialRawPage={rawPage} videoTeaserDefaults={corporateIdentity.videoTeaser} />
+  )
 }

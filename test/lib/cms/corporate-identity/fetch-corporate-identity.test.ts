@@ -61,6 +61,24 @@ describe('fetchCorporateIdentity', () => {
     })
   })
 
+  it('maps video-teaser defaults and falls back safely for invalid values', async () => {
+    mockFetchOnce({
+      videoTeaser: {
+        headline: { color: '#123456', fontSize: '3rem', tag: 'h1' },
+        design: { lightboxMaxWidth: '90vw', lightboxBackdropColor: 'rgba(0, 0, 0, 0.6)' },
+        youtube: { consentRequired: false, consentButtonLabel: 'Externes Video laden' },
+      },
+    })
+
+    const result = await fetchCorporateIdentity()
+
+    expect(result.videoTeaser).toMatchObject({
+      headline: { color: '#123456', fontSize: '3rem', tag: 'h1' },
+      design: { lightboxMaxWidth: '90vw', lightboxBackdropColor: 'rgba(0, 0, 0, 0.6)' },
+      youtube: { required: false, buttonLabel: 'Externes Video laden' },
+    })
+  })
+
   it('throws when the CMS responds with a non-2xx status', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 500 }))
 

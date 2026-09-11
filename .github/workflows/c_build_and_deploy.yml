@@ -75,7 +75,8 @@ jobs:
       - name: Build Website
         run: |
           pnpm install --frozen-lockfile
-          pnpm build
+          PAYLOAD_ORIGIN="https://${{ inputs.CMS_APP_SERVICE_NAME }}.azurewebsites.net"
+          PAYLOAD_API_URL="$PAYLOAD_ORIGIN" NEXT_PUBLIC_PAYLOAD_API_URL="$PAYLOAD_ORIGIN" pnpm build
 
       - name: Build Docker image
         env:

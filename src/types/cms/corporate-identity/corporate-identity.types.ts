@@ -7,4 +7,6 @@ export interface CorporateIdentityColors {
 export interface CorporateIdentity {
   colors: CorporateIdentityColors
   logoUrl: string
+  videoTeaser: VideoTeaserDefaults
 }
+import type { VideoTeaserDefaults } from '@/types/cms/page/blocks/video-teaser.types'

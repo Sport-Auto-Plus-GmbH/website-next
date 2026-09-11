@@ -105,3 +105,7 @@
     @apply font-sans;
   }
 }
+
+.video-teaser-dialog::backdrop {
+  background-color: var(--video-teaser-backdrop-color, rgb(0 0 0 / 80%));
+}
