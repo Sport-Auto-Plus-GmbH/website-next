@@ -75,6 +75,21 @@ describe('VehicleListing', () => {
     expect(screen.getByRole('link', { name: /BMW 320d/ })).toHaveAttribute('href', '/fahrzeuge/1')
   })
 
+  it("proxies the vehicle photo through this Website's own API route rather than the raw upstream URL", () => {
+    render(
+      <VehicleListing
+        heading={{ text: 'Unsere Fahrzeuge', fontSize: 'lg', color: '#323E48' }}
+        subheading={{ text: '', fontSize: 'md', color: '#323E48' }}
+        maxItems={2}
+        vehicles={vehicles}
+      />,
+    )
+
+    const image = screen.getByRole('img', { name: 'BMW 320d' })
+    expect(image.getAttribute('src')).toContain(encodeURIComponent('/api/vehicles/1/image'))
+    expect(image.getAttribute('src')).not.toContain('cdn.example.com')
+  })
+
   it('shows an empty state when there are no vehicles', () => {
     render(
       <VehicleListing

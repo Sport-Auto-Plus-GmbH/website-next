@@ -267,13 +267,18 @@ vehicle/`) — Payload and the Datendrehscheibe are independent APIs, fetched se
   size + color" rather than redefining it. Each block still defines its **own**
   `FONT_SIZE_CLASSES` Tailwind mapping in its own component, though — the same `FontSize`
   enum intentionally maps to different pixel sizes for a full-page hero vs. a section heading.
-- Vehicle photos come from the Datendrehscheibe's own CDN (HubSpot, signed URLs), rendered
-  via `next/image` like any other image — `next.config.ts`'s `images.remotePatterns` allows
-  `**.hubspotusercontent-eu1.net` alongside the existing local Payload media pattern. No
-  `search` restriction (the signed URLs carry `Expires`/`Signature` query params) and no fixed
-  `pathname` (it varies per file). The old Angular project never optimized or proxied these
-  images at all (plain `<img>`, no CDN allowlist anywhere in that codebase) — there's no
-  precedent to preserve here, just this project's own existing `next/image` convention.
+- Vehicle photos come from the Datendrehscheibe's own CDN (HubSpot, signed URLs) but are
+  never loaded from there directly — **`src/app/api/vehicles/[vehicleViewId]/image/route.ts`**
+  fetches the actual upstream URL server-side and streams the bytes back, so the browser only
+  ever sees this Website's own origin (`/api/vehicles/10/image`, `?index=1` for a gallery
+  photo). **`src/lib/vehicle/vehicle-photo-url.ts`** builds that same-origin URL; components
+  never touch `vehicle.mainImage`/`vehicle.images` directly as an `<Image src>`. Because the
+  `src` next/image sees is always a relative, same-origin path, `next.config.ts` needs no
+  HubSpot entry in `images.remotePatterns` at all — only the local Payload media pattern
+  remains. The proxy route's own `Cache-Control` matches `fetchVehicleDetail`'s 300s revalidate
+  window. The old Angular project never optimized, proxied, or hid these images at all (plain
+  `<img>` straight to the CDN, no allowlist anywhere in that codebase) — there's no precedent
+  to preserve here.
 - Without Datendrehscheibe running, a page with a `vehicleListing` block throws (matches this
   project's existing, documented behavior for any infrastructure failure — see
   `.ai/quality/ERROR_HANDLING.md` — not something new introduced by this feature).

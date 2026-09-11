@@ -2,6 +2,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { vehiclePhotoUrl } from '@/lib/vehicle/vehicle-photo-url'
 import type { FontSize } from '@/types/cms/page/blocks/styled-text.types'
 import type { VehicleListingBlock } from '@/types/cms/page/blocks/vehicle-listing.types'
 import type { VehicleListing as VehicleListingItem } from '@/types/datendrehscheibe/vehicle/vehicle-listing.types'
@@ -52,7 +53,7 @@ export function VehicleListing({ heading, subheading, maxItems, vehicles }: Vehi
               <Card className="h-full transition-shadow hover:shadow-lg">
                 {vehicle.mainImage && (
                   <Image
-                    src={vehicle.mainImage}
+                    src={vehiclePhotoUrl(vehicle.id)}
                     alt={`${vehicle.brand} ${vehicle.carName}`}
                     width={640}
                     height={360}

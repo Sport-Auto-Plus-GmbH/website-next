@@ -64,6 +64,14 @@ describe('VehicleDetailPage', () => {
     expect(screen.getByText('Navigation')).toBeTruthy()
     expect(screen.queryByText('Panoramadach')).not.toBeInTheDocument()
     expect(fetchVehicleDetail).toHaveBeenCalledWith(10)
+
+    // Photos are proxied through this Website's own API route, never the raw
+    // upstream (Datendrehscheibe/HubSpot) URL — see vehicle-photo-url.ts.
+    const images = screen.getAllByRole('img', { name: 'BMW 320d' })
+    for (const image of images) {
+      expect(image.getAttribute('src')).not.toContain('cdn.example.com')
+    }
+    expect(images[0].getAttribute('src')).toContain(encodeURIComponent('/api/vehicles/10/image'))
   })
 
   it('calls notFound() for a non-numeric id without fetching', async () => {

@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
 import { fetchVehicleDetail } from '@/lib/datendrehscheibe/vehicle/fetch-vehicle-detail'
+import { vehiclePhotoUrl } from '@/lib/vehicle/vehicle-photo-url'
 
 const EQUIPMENT_LABELS: Record<string, string> = {
   navigation: 'Navigation',
@@ -38,7 +39,7 @@ export default async function VehicleDetailPage(props: PageProps<'/fahrzeuge/[ve
 
       {vehicle.mainImage && (
         <Image
-          src={vehicle.mainImage}
+          src={vehiclePhotoUrl(vehicle.id)}
           alt={`${vehicle.brand} ${vehicle.carName}`}
           width={1024}
           height={576}
@@ -152,10 +153,10 @@ export default async function VehicleDetailPage(props: PageProps<'/fahrzeuge/[ve
         <div className="flex flex-col gap-2">
           <h2 className="font-heading text-xl">Bilder</h2>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-            {vehicle.images.map((image) => (
+            {vehicle.images.map((_image, index) => (
               <Image
-                key={image}
-                src={image}
+                key={index}
+                src={vehiclePhotoUrl(vehicle.id, index)}
                 alt={`${vehicle.brand} ${vehicle.carName}`}
                 width={480}
                 height={270}

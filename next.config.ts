@@ -11,15 +11,10 @@ const nextConfig: NextConfig = {
         port: '3000',
         pathname: '/api/media/**',
       },
-      // Vehicle photos (mainImage/images/galleryMedia) from the Datendrehscheibe come
-      // from HubSpot's CDN, signed URLs with an Expires/Signature query string — no
-      // `search` restriction here, and no fixed pathname since it varies per file.
-      // `**.` matches the numeric portal-id subdomain Datendrehscheibe returns
-      // (e.g. 147753997.cdnp1.hubspotusercontent-eu1.net).
-      {
-        protocol: 'https',
-        hostname: '**.hubspotusercontent-eu1.net',
-      },
+      // Vehicle photos are NOT loaded from their upstream CDN directly — see
+      // app/api/vehicles/[vehicleViewId]/image/route.ts, which proxies them through this
+      // Website's own origin so the client never sees the Datendrehscheibe/HubSpot URL.
+      // A same-origin `src` needs no remotePattern, so no entry for that CDN here.
     ],
   },
 }
