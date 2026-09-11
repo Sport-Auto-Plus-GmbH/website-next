@@ -205,6 +205,30 @@ collection calls it (with a shared secret, `REVALIDATE_SECRET`) right after a sa
 revalidates that specific `page:<slug>` tag immediately. See `.ai/backend/ROUTE_HANDLERS.md`
 and payload-next's own README for the other side of this.
 
+## Redirects
+
+Editor-managed redirects (payload-next's `redirects` collection, from its `@payloadcms/
+plugin-redirects`) are applied by **`src/proxy.ts`** — Next.js 16 renamed `middleware.ts` to
+`proxy.ts` (same mechanism, see `node_modules/next/dist/docs/.../proxy.md`), which now
+defaults to the Node.js runtime, so it can use the same `fetch` + Data Cache as everything
+else in `lib/cms/`.
+
+- **`src/lib/cms/redirects/fetch-redirects.ts`** fetches every redirect (`?limit=0&depth=1` —
+  no pagination, and `depth=1` so an internal-page target's `slug` is populated) and maps it
+  to a plain `{ from, to }`. Cached for up to an hour, tag `redirects` — payload-next's
+  `revalidateRedirectsAfterChange`/`AfterDelete` hooks hit `/api/revalidate` with that same
+  tag, so a saved redirect takes effect immediately, same mechanism as Pages.
+- **`src/lib/cms/redirects/resolve-redirect.ts`** does the actual path matching
+  (case-insensitive, trailing-slash-insensitive) and a self-redirect-loop check — e.g. an
+  absolute custom URL that happens to point at the same path it's attached to would otherwise
+  redirect forever.
+- `proxy.ts` itself stays thin: fetch the list, resolve a target, redirect (301) or let the
+  request through. A lookup failure (CMS down, network error) is logged and swallowed —
+  **it must never block rendering** — ported from the old Angular server's same "fail open"
+  behavior (`Website-4.0/website/src/server.ts`).
+- The `matcher` excludes `api`, `_next/static`, `_next/image`, and a few metadata files so
+  Proxy doesn't run (and doesn't fetch redirects) for every asset request.
+
 ## Datendrehscheibe API Types
 
 The Datendrehscheibe publishes real OpenAPI specs. Rather than hand-writing types for its
