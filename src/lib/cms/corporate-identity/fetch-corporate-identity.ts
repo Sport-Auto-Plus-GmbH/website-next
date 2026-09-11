@@ -1,5 +1,11 @@
 import { PAYLOAD_API_URL } from '@/lib/cms/config'
+import {
+  DEFAULT_VIDEO_TEASER_DEFAULTS,
+  isValidVideoTeaserColor,
+  isValidVideoTeaserCssLength,
+} from '@/lib/cms/page/blocks/video-teaser'
 import type { CorporateIdentity } from '@/types/cms/corporate-identity/corporate-identity.types'
+import type { HeadingTag, VideoTeaserDefaults } from '@/types/cms/page/blocks/video-teaser.types'
 
 const HEX_COLOR_PATTERN = /^#[0-9a-fA-F]{6}$/
 
@@ -20,6 +26,16 @@ interface PayloadCorporateIdentityResponse {
     secondary?: string
     destructive?: string
   }
+  videoTeaser?: {
+    design?: Partial<VideoTeaserDefaults['design']> | null
+    headline?: Partial<VideoTeaserDefaults['headline']> | null
+    subheadline?: Partial<VideoTeaserDefaults['subheadline']> | null
+    youtube?: {
+      consentButtonLabel?: string | null
+      consentRequired?: boolean | null
+      consentText?: string | null
+    } | null
+  } | null
 }
 
 function sanitizeHexColor(value: string | undefined, fallback: string): string {
@@ -33,6 +49,78 @@ function resolveLogoUrl(logo: PayloadCorporateIdentityResponse['logo']): string 
   return DEFAULT_LOGO_URL
 }
 
+function sanitizeCssLength(value: string | undefined, fallback: string): string {
+  return value && isValidVideoTeaserCssLength(value) ? value : fallback
+}
+
+function sanitizeColor(value: string | undefined, fallback: string): string {
+  return value && isValidVideoTeaserColor(value) ? value : fallback
+}
+
+function sanitizeHeadingTag(value: string | undefined, fallback: HeadingTag): HeadingTag {
+  return ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(value ?? '')
+    ? (value as HeadingTag)
+    : fallback
+}
+
+function mapVideoTeaserDefaults(
+  value: PayloadCorporateIdentityResponse['videoTeaser'],
+): VideoTeaserDefaults {
+  const defaults = DEFAULT_VIDEO_TEASER_DEFAULTS
+  return {
+    headline: {
+      tag: sanitizeHeadingTag(value?.headline?.tag, defaults.headline.tag),
+      color: sanitizeColor(value?.headline?.color, defaults.headline.color),
+      fontSize: sanitizeCssLength(value?.headline?.fontSize, defaults.headline.fontSize),
+    },
+    subheadline: {
+      tag: sanitizeHeadingTag(value?.subheadline?.tag, defaults.subheadline.tag),
+      color: sanitizeColor(value?.subheadline?.color, defaults.subheadline.color),
+      fontSize: sanitizeCssLength(value?.subheadline?.fontSize, defaults.subheadline.fontSize),
+    },
+    design: {
+      overlayColor: sanitizeColor(value?.design?.overlayColor, defaults.design.overlayColor),
+      playButtonBackgroundColor: sanitizeColor(
+        value?.design?.playButtonBackgroundColor,
+        defaults.design.playButtonBackgroundColor,
+      ),
+      playButtonTextColor: sanitizeColor(
+        value?.design?.playButtonTextColor,
+        defaults.design.playButtonTextColor,
+      ),
+      playButtonRadius: sanitizeCssLength(
+        value?.design?.playButtonRadius,
+        defaults.design.playButtonRadius,
+      ),
+      lightboxBackdropColor: sanitizeColor(
+        value?.design?.lightboxBackdropColor,
+        defaults.design.lightboxBackdropColor,
+      ),
+      lightboxFrameColor: sanitizeColor(
+        value?.design?.lightboxFrameColor,
+        defaults.design.lightboxFrameColor,
+      ),
+      lightboxFrameWidth: sanitizeCssLength(
+        value?.design?.lightboxFrameWidth,
+        defaults.design.lightboxFrameWidth,
+      ),
+      lightboxMaxWidth: sanitizeCssLength(
+        value?.design?.lightboxMaxWidth,
+        defaults.design.lightboxMaxWidth,
+      ),
+      lightboxRadius: sanitizeCssLength(
+        value?.design?.lightboxRadius,
+        defaults.design.lightboxRadius,
+      ),
+    },
+    youtube: {
+      required: value?.youtube?.consentRequired ?? defaults.youtube.required,
+      text: value?.youtube?.consentText?.trim() || defaults.youtube.text,
+      buttonLabel: value?.youtube?.consentButtonLabel?.trim() || defaults.youtube.buttonLabel,
+    },
+  }
+}
+
 function mapCorporateIdentityResponse(data: PayloadCorporateIdentityResponse): CorporateIdentity {
   return {
     colors: {
@@ -41,6 +129,7 @@ function mapCorporateIdentityResponse(data: PayloadCorporateIdentityResponse): C
       destructive: sanitizeHexColor(data.colors?.destructive, DEFAULT_COLORS.destructive),
     },
     logoUrl: resolveLogoUrl(data.logo),
+    videoTeaser: mapVideoTeaserDefaults(data.videoTeaser),
   }
 }
 

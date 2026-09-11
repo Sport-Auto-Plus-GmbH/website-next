@@ -189,6 +189,63 @@ describe('fetchPageBySlug', () => {
     expect(result?.blocks[0].id).toBe('block-2')
   })
 
+  it('maps a video teaser with populated media relationships', async () => {
+    mockFetchOnce({
+      docs: [
+        {
+          id: 1,
+          title: 'Startseite',
+          slug: 'home',
+          layout: [
+            {
+              id: 'video-1',
+              blockType: 'videoTeaser',
+              headline: { text: 'Unser Video', tag: 'h2', color: '#FFFFFF', fontSize: '2rem' },
+              teaserMedia: {
+                url: '/api/media/file/teaser.webp',
+                alt: 'Teaserbild',
+                mimeType: 'image/webp',
+              },
+              videoMedia: { sourceType: 'youtube', youtubeUrl: 'https://youtu.be/video-id' },
+            },
+          ],
+        },
+      ],
+    })
+
+    const result = await fetchPageBySlug('home')
+
+    expect(result?.blocks[0]).toMatchObject({
+      blockType: 'videoTeaser',
+      teaserImage: { alt: 'Teaserbild' },
+      video: { kind: 'youtube', embedUrl: expect.stringContaining('video-id') },
+    })
+  })
+
+  it('skips a video teaser when its relationships do not contain valid image/video media', async () => {
+    mockFetchOnce({
+      docs: [
+        {
+          id: 1,
+          title: 'Startseite',
+          slug: 'home',
+          layout: [
+            {
+              id: 'video-1',
+              blockType: 'videoTeaser',
+              teaserMedia: { url: '/api/media/file/not-an-image.mp4', mimeType: 'video/mp4' },
+              videoMedia: { url: '/api/media/file/not-a-video.webp', mimeType: 'image/webp' },
+            },
+          ],
+        },
+      ],
+    })
+
+    const result = await fetchPageBySlug('home')
+
+    expect(result?.blocks).toEqual([])
+  })
+
   it('returns null when no page has that slug', async () => {
     mockFetchOnce({ docs: [] })
 

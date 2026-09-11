@@ -2,11 +2,21 @@ import { z } from 'zod'
 
 import type { PageBlock } from '@/types/cms/page/page.types'
 import type { RawBlock } from '@/types/cms/page/raw-block.types'
+import type { VideoTeaserDefaults } from '@/types/cms/page/blocks/video-teaser.types'
 
 import { mapHeroTeaserBlock, payloadHeroTeaserBlockSchema } from './hero-teaser'
+import {
+  mapVideoTeaserBlock,
+  payloadVideoTeaserBlockSchema,
+  type PayloadVideoTeaserBlock,
+} from './video-teaser'
 import { mapVehicleListingBlock, payloadVehicleListingBlockSchema } from './vehicle-listing'
 
-type BlockMapper = (raw: RawBlock) => PageBlock
+export interface BlockMappingContext {
+  videoTeaserDefaults?: VideoTeaserDefaults
+}
+
+type BlockMapper = (raw: RawBlock, context: BlockMappingContext) => PageBlock | null
 
 /**
  * Type-erases a block's own strictly-typed mapper into the shape the registry below
@@ -25,6 +35,8 @@ function asMapper<T extends RawBlock>(map: (raw: T) => PageBlock): BlockMapper {
 export const blockMappers: Record<string, BlockMapper> = {
   heroTeaser: asMapper(mapHeroTeaserBlock),
   vehicleListing: asMapper(mapVehicleListingBlock),
+  videoTeaser: (raw, { videoTeaserDefaults }) =>
+    mapVideoTeaserBlock(raw as PayloadVideoTeaserBlock, videoTeaserDefaults),
 }
 
 /**
@@ -38,4 +50,5 @@ export const blockMappers: Record<string, BlockMapper> = {
 export const blockSchema = z.discriminatedUnion('blockType', [
   payloadHeroTeaserBlockSchema,
   payloadVehicleListingBlockSchema,
+  payloadVideoTeaserBlockSchema,
 ])

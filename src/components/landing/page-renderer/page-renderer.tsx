@@ -4,36 +4,32 @@ import { RefreshRouteOnSave, useLivePreview } from '@payloadcms/live-preview-rea
 import { useRouter } from 'next/navigation'
 
 import { HeroTeaser } from '@/components/landing/hero-teaser/hero-teaser'
+import { VideoTeaser } from '@/components/landing/video-teaser/video-teaser'
 import { VehicleListing } from '@/components/landing/vehicle-listing/vehicle-listing'
 import { PAYLOAD_PUBLIC_URL } from '@/lib/cms/config'
 import { mapPage, type PayloadPageDoc } from '@/lib/cms/page/fetch-page-by-slug'
 import type { VehicleListing as VehicleListingItem } from '@/types/datendrehscheibe/vehicle/vehicle-listing.types'
+import type { VideoTeaserDefaults } from '@/types/cms/page/blocks/video-teaser.types'
 
 interface PageRendererProps {
   initialRawPage: PayloadPageDoc
-  // Pre-fetched server-side (see app/page.tsx) rather than fetched here: the
-  // Datendrehscheibe must only be called from a Server Component/Route Handler (see
-  // .ai/backend/DATENDREHSCHEIBE_CLIENT.md), and a vehicleListing block's `maxItems` is
-  // just a client-side `.slice()` over this same list — so it still updates live as an
-  // editor changes it, without needing a fresh fetch per keystroke.
+  // The Datendrehscheibe is called server-side only. A live edit of maxItems merely
+  // slices this pre-fetched list, so it does not trigger an extra API request.
   vehicles: VehicleListingItem[]
+  videoTeaserDefaults: VideoTeaserDefaults
 }
 
-// Client wrapper around Payload's Live Preview protocol: the admin panel posts the
-// unsaved form state to this iframe on every field change, and useLivePreview re-renders
-// with it — see .ai/backend/CMS_CLIENT.md's "Drafts and Live Preview". Outside the admin's
-// iframe no message ever arrives, so `data` just stays the server-fetched initialRawPage.
-// RefreshRouteOnSave additionally re-fetches the Server Component's data on an actual
-// Save/Publish, so this same tab reflects it without a manual reload.
-export function PageRenderer({ initialRawPage, vehicles }: PageRendererProps) {
+// Client wrapper around Payload's Live Preview protocol. The iframe posts unsaved form
+// state here, while RefreshRouteOnSave refreshes server-fetched data after publishing.
+export function PageRenderer({ initialRawPage, vehicles, videoTeaserDefaults }: PageRendererProps) {
   const router = useRouter()
   const { data } = useLivePreview<PayloadPageDoc>({
     initialData: initialRawPage,
     serverURL: PAYLOAD_PUBLIC_URL,
-    depth: 1,
+    depth: 2,
   })
 
-  const page = mapPage(data)
+  const page = mapPage(data, { videoTeaserDefaults })
 
   return (
     <>
@@ -45,6 +41,8 @@ export function PageRenderer({ initialRawPage, vehicles }: PageRendererProps) {
               return <HeroTeaser key={block.id} {...block} />
             case 'vehicleListing':
               return <VehicleListing key={block.id} {...block} vehicles={vehicles} />
+            case 'videoTeaser':
+              return <VideoTeaser key={block.id} {...block} />
             default:
               return null
           }

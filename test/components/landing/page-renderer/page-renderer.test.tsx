@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 
 import { PageRenderer } from '@/components/landing/page-renderer/page-renderer'
+import { DEFAULT_VIDEO_TEASER_DEFAULTS } from '@/lib/cms/page/blocks/video-teaser'
 import type { PayloadPageDoc } from '@/lib/cms/page/fetch-page-by-slug'
 
 const { useLivePreview } = vi.hoisted(() => ({ useLivePreview: vi.fn() }))
@@ -23,18 +24,27 @@ const initialRawPage: PayloadPageDoc = {
       headline: { text: 'Ihr Traumauto wartet auf Sie', fontSize: 'xl', color: '#E94E1D' },
       subheadline: { text: '', fontSize: 'md', color: '#323E48' },
       description: { text: '', fontSize: 'md', color: '#323E48' },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- minimal raw block fixture, only the mapped fields matter here
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- minimal raw block fixture
     } as any,
   ],
+}
+
+const defaultProps = {
+  initialRawPage,
+  vehicles: [],
+  videoTeaserDefaults: DEFAULT_VIDEO_TEASER_DEFAULTS,
 }
 
 describe('PageRenderer', () => {
   it('renders the initial page before any live-preview update arrives', () => {
     useLivePreview.mockReturnValue({ data: initialRawPage, isLoading: true })
 
-    render(<PageRenderer initialRawPage={initialRawPage} vehicles={[]} />)
+    render(<PageRenderer {...defaultProps} />)
 
     expect(screen.getByText('Ihr Traumauto wartet auf Sie')).toBeTruthy()
+    expect(useLivePreview).toHaveBeenCalledWith(
+      expect.objectContaining({ depth: 2, initialData: initialRawPage }),
+    )
   })
 
   it('re-renders with the live-preview data once an update arrives', () => {
@@ -44,13 +54,13 @@ describe('PageRenderer', () => {
         {
           ...(initialRawPage.layout![0] as object),
           headline: { text: 'Live editierte Headline', fontSize: 'xl', color: '#E94E1D' },
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- minimal raw block fixture, only the mapped fields matter here
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- minimal raw block fixture
         } as any,
       ],
     }
     useLivePreview.mockReturnValue({ data: updatedRawPage, isLoading: false })
 
-    render(<PageRenderer initialRawPage={initialRawPage} vehicles={[]} />)
+    render(<PageRenderer {...defaultProps} />)
 
     expect(screen.getByText('Live editierte Headline')).toBeTruthy()
   })
@@ -67,7 +77,7 @@ describe('PageRenderer', () => {
           heading: { text: 'Unsere Fahrzeuge', fontSize: 'lg', color: '#323E48' },
           subheading: { text: '', fontSize: 'md', color: '#323E48' },
           maxItems: 1,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- minimal raw block fixture, only the mapped fields matter here
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- minimal raw block fixture
         } as any,
       ],
     }
@@ -75,6 +85,7 @@ describe('PageRenderer', () => {
 
     render(
       <PageRenderer
+        {...defaultProps}
         initialRawPage={pageWithVehicleListing}
         vehicles={[
           {

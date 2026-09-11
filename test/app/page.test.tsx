@@ -1,14 +1,16 @@
 import { render, screen } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import HomePage from '@/app/page'
 
-const { fetchRawPageBySlug, fetchVehicleListing } = vi.hoisted(() => ({
+const { fetchRawPageBySlug, fetchCorporateIdentity, fetchVehicleListing } = vi.hoisted(() => ({
   fetchRawPageBySlug: vi.fn(),
+  fetchCorporateIdentity: vi.fn(),
   fetchVehicleListing: vi.fn(),
 }))
 
 vi.mock('@/lib/cms/page/fetch-page-by-slug', () => ({ fetchRawPageBySlug }))
+vi.mock('@/lib/cms/corporate-identity/fetch-corporate-identity', () => ({ fetchCorporateIdentity }))
 vi.mock('@/lib/datendrehscheibe/vehicle/fetch-vehicle-listing', () => ({ fetchVehicleListing }))
 vi.mock('@/components/landing/page-renderer/page-renderer', () => ({
   PageRenderer: ({
@@ -25,18 +27,19 @@ vi.mock('@/components/landing/page-renderer/page-renderer', () => ({
 }))
 
 describe('HomePage', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    fetchCorporateIdentity.mockResolvedValue({ videoTeaser: {} })
+  })
+
   it('renders the PageRenderer with the fetched "home" page', async () => {
-    fetchRawPageBySlug.mockResolvedValue({
-      id: 1,
-      title: 'Startseite',
-      slug: 'home',
-      layout: [],
-    })
+    fetchRawPageBySlug.mockResolvedValue({ id: 1, title: 'Startseite', slug: 'home', layout: [] })
 
     render(await HomePage())
 
     expect(screen.getByTestId('page-renderer')).toHaveTextContent('Startseite (0 Fahrzeuge)')
     expect(fetchRawPageBySlug).toHaveBeenCalledWith('home')
+    expect(fetchCorporateIdentity).toHaveBeenCalledOnce()
     expect(fetchVehicleListing).not.toHaveBeenCalled()
   })
 
@@ -52,7 +55,7 @@ describe('HomePage', () => {
     render(await HomePage())
 
     expect(screen.getByTestId('page-renderer')).toHaveTextContent('Startseite (1 Fahrzeuge)')
-    expect(fetchVehicleListing).toHaveBeenCalledTimes(1)
+    expect(fetchVehicleListing).toHaveBeenCalledOnce()
   })
 
   it('shows a fallback message when no "home" page exists yet', async () => {

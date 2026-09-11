@@ -1,16 +1,16 @@
 import { PAYLOAD_API_URL } from '@/lib/cms/config'
+import { fetchCorporateIdentity } from '@/lib/cms/corporate-identity/fetch-corporate-identity'
 import type { Page, PageBlock } from '@/types/cms/page/page.types'
 import type { RawBlock } from '@/types/cms/page/raw-block.types'
 
-import { blockMappers, blockSchema } from './blocks'
+import { blockMappers, blockSchema, type BlockMappingContext } from './blocks'
 
 interface PayloadListResponse<T> {
   docs: T[]
 }
 
-// Exported so the Live Preview client wrapper (components/landing/page-renderer/) can
-// type the raw postMessage payload it receives — see mapPage below for why it also
-// needs to run client-side, not just here.
+// Exported so the Live Preview client wrapper can type the raw postMessage payload it
+// receives. The mapping deliberately runs on both server and client.
 export interface PayloadPageDoc {
   id: number
   title: string
@@ -18,45 +18,38 @@ export interface PayloadPageDoc {
   layout?: RawBlock[] | null
 }
 
-function mapBlock(block: RawBlock): PageBlock | null {
+function mapBlock(block: RawBlock, context: BlockMappingContext): PageBlock | null {
   const parsed = blockSchema.safeParse(block)
   // Payload can add a block type this Website doesn't render yet, or a known block can
-  // arrive malformed (a field renamed/removed on one side mid-deploy) — blockSchema
-  // (a Zod discriminated union, see .ai/backend/VALIDATION.md) rejects both the same way.
-  // Skip rather than crash the whole page. Adding a new block only ever touches
-  // blocks/index.ts's registry/schema list, never this file.
+  // arrive malformed (a field renamed/removed on one side mid-deploy). Skip it rather
+  // than crashing the whole page; new blocks are registered only in blocks/index.ts.
   if (!parsed.success) {
     return null
   }
 
   const map = blockMappers[parsed.data.blockType]
-  return map ? map(parsed.data) : null
+  return map ? map(parsed.data, context) : null
 }
 
-/**
- * Maps a raw Payload page document into the Website's own `Page` type. Exported (not
- * just used internally by fetchPageBySlug) because Live Preview's `useLivePreview`
- * hook delivers this same raw shape client-side (the in-editor, unsaved form state,
- * sent via postMessage) — the client wrapper re-runs this same mapper on every
- * live update rather than duplicating the mapping logic.
- */
-export function mapPage(doc: PayloadPageDoc): Page {
+/** Maps a raw Payload page document into the Website's own `Page` type. */
+export function mapPage(doc: PayloadPageDoc, context: BlockMappingContext = {}): Page {
   return {
     id: doc.id,
     title: doc.title,
     slug: doc.slug,
-    blocks: (doc.layout ?? []).map(mapBlock).filter((block): block is PageBlock => block !== null),
+    blocks: (doc.layout ?? [])
+      .map((block) => mapBlock(block, context))
+      .filter((block): block is PageBlock => block !== null),
   }
 }
 
 /**
- * Fetches the raw page document by slug, with no Website-side mapping — only the
- * Live Preview client wrapper needs the raw shape (see mapPage above); everything
- * else should use fetchPageBySlug below instead.
+ * Fetches the raw page document by slug. Live Preview needs populated media
+ * relationships, therefore depth=2 is intentional.
  */
 export async function fetchRawPageBySlug(slug: string): Promise<PayloadPageDoc | null> {
   const response = await fetch(
-    `${PAYLOAD_API_URL}/api/pages?where[slug][equals]=${encodeURIComponent(slug)}&limit=1`,
+    `${PAYLOAD_API_URL}/api/pages?where[slug][equals]=${encodeURIComponent(slug)}&depth=2&limit=1`,
     { next: { revalidate: 3600, tags: [`page:${slug}`] } },
   )
 
@@ -68,11 +61,13 @@ export async function fetchRawPageBySlug(slug: string): Promise<PayloadPageDoc |
   return data.docs[0] ?? null
 }
 
-/**
- * Fetches a page by its slug. Returns null if no page has that slug (a legitimate
- * "not found," not an error) — see .ai/backend/CMS_CLIENT.md.
- */
+/** Fetches and maps a page. A missing page is a legitimate not-found result. */
 export async function fetchPageBySlug(slug: string): Promise<Page | null> {
   const doc = await fetchRawPageBySlug(slug)
-  return doc ? mapPage(doc) : null
+  if (!doc) {
+    return null
+  }
+
+  const corporateIdentity = await fetchCorporateIdentity()
+  return mapPage(doc, { videoTeaserDefaults: corporateIdentity.videoTeaser })
 }
