@@ -161,6 +161,34 @@ describe('fetchPageBySlug', () => {
     expect(result?.blocks[0].id).toBe('block-2')
   })
 
+  it('skips a known blockType that fails schema validation, without affecting other blocks', async () => {
+    mockFetchOnce({
+      docs: [
+        {
+          id: 1,
+          title: 'Startseite',
+          slug: 'home',
+          layout: [
+            // A known blockType, but missing the required "headline" field — blockSchema
+            // (a Zod discriminated union) rejects this the same way it rejects an
+            // unrecognized blockType, rather than crashing on a missing field.
+            { id: 'block-1', blockType: 'heroTeaser' },
+            {
+              id: 'block-2',
+              blockType: 'heroTeaser',
+              headline: { text: 'Willkommen', fontSize: 'md', color: '#323E48' },
+            },
+          ],
+        },
+      ],
+    })
+
+    const result = await fetchPageBySlug('home')
+
+    expect(result?.blocks).toHaveLength(1)
+    expect(result?.blocks[0].id).toBe('block-2')
+  })
+
   it('returns null when no page has that slug', async () => {
     mockFetchOnce({ docs: [] })
 

@@ -1,15 +1,17 @@
+import { z } from 'zod'
+
 import type { PageBlock } from '@/types/cms/page/page.types'
 import type { RawBlock } from '@/types/cms/page/raw-block.types'
 
-import { mapHeroTeaserBlock, type PayloadHeroTeaserBlock } from './hero-teaser'
-import { mapVehicleListingBlock, type PayloadVehicleListingBlock } from './vehicle-listing'
+import { mapHeroTeaserBlock, payloadHeroTeaserBlockSchema } from './hero-teaser'
+import { mapVehicleListingBlock, payloadVehicleListingBlockSchema } from './vehicle-listing'
 
 type BlockMapper = (raw: RawBlock) => PageBlock
 
 /**
  * Type-erases a block's own strictly-typed mapper into the shape the registry below
- * needs. Safe: blockMappers only ever calls a mapper after matching its own blockType
- * key, so `raw` is always that block's real raw shape at runtime.
+ * needs. Safe: blockMappers only ever calls a mapper after blockSchema below has already
+ * validated `raw` against that exact blockType's schema.
  */
 function asMapper<T extends RawBlock>(map: (raw: T) => PageBlock): BlockMapper {
   return (raw) => map(raw as T)
@@ -21,6 +23,19 @@ function asMapper<T extends RawBlock>(map: (raw: T) => PageBlock): BlockMapper {
  * block as more are added; it only ever looks up this registry by blockType.
  */
 export const blockMappers: Record<string, BlockMapper> = {
-  heroTeaser: asMapper<PayloadHeroTeaserBlock>(mapHeroTeaserBlock),
-  vehicleListing: asMapper<PayloadVehicleListingBlock>(mapVehicleListingBlock),
+  heroTeaser: asMapper(mapHeroTeaserBlock),
+  vehicleListing: asMapper(mapVehicleListingBlock),
 }
+
+/**
+ * Validates a raw block against its own blockType's schema before it's ever handed to a
+ * mapper — see .ai/backend/VALIDATION.md's "Payload blocks with a discriminated blockType"
+ * as the intended use case for a Zod discriminated union. An unrecognized blockType (a
+ * block payload-next added that this Website doesn't render yet) fails to parse here
+ * exactly like a malformed known one — fetch-page-by-slug.ts's mapBlock treats both the
+ * same way: skip rather than crash the page.
+ */
+export const blockSchema = z.discriminatedUnion('blockType', [
+  payloadHeroTeaserBlockSchema,
+  payloadVehicleListingBlockSchema,
+])

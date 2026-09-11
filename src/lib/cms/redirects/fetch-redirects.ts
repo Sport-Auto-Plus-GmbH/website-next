@@ -1,3 +1,5 @@
+import { z } from 'zod'
+
 import { PAYLOAD_API_URL } from '@/lib/cms/config'
 import type { RedirectEntry } from '@/types/cms/redirects/redirect.types'
 
@@ -5,18 +7,32 @@ interface PayloadListResponse<T> {
   docs: T[]
 }
 
-interface PayloadRedirectDoc {
-  id: number
-  from: string
-  to: {
-    type: 'reference' | 'custom'
-    reference?: {
-      relationTo: 'pages'
-      value: number | { slug: string }
-    } | null
-    url?: string | null
-  }
-}
+// A genuinely variant shape (discriminated by `type`), so this is a Zod discriminated
+// union rather than a plain interface + manual branching — see .ai/backend/VALIDATION.md's
+// "CMS Response Validation".
+const payloadRedirectToSchema = z.discriminatedUnion('type', [
+  z.object({
+    type: z.literal('reference'),
+    reference: z
+      .object({
+        relationTo: z.literal('pages'),
+        value: z.union([z.number(), z.object({ slug: z.string() })]),
+      })
+      .nullish(),
+  }),
+  z.object({
+    type: z.literal('custom'),
+    url: z.string().nullish(),
+  }),
+])
+
+const payloadRedirectDocSchema = z.object({
+  id: z.number(),
+  from: z.string(),
+  to: payloadRedirectToSchema,
+})
+
+type PayloadRedirectDoc = z.infer<typeof payloadRedirectDocSchema>
 
 // Matches payload-next's own resolvePageLivePreviewUrl.ts convention: the "home"-slugged
 // page is the site root, every other slug is its own top-level path.
@@ -56,8 +72,11 @@ export async function fetchRedirects(): Promise<RedirectEntry[]> {
     throw new Error(`Failed to fetch redirects: ${response.status}`)
   }
 
-  const data: PayloadListResponse<PayloadRedirectDoc> = await response.json()
+  const data: PayloadListResponse<unknown> = await response.json()
   return data.docs
-    .map(mapRedirect)
+    .map((doc) => {
+      const parsed = payloadRedirectDocSchema.safeParse(doc)
+      return parsed.success ? mapRedirect(parsed.data) : null
+    })
     .filter((redirect): redirect is RedirectEntry => redirect !== null)
 }

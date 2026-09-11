@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
-import { mapVehicleListingBlock } from '@/lib/cms/page/blocks/vehicle-listing'
+import {
+  mapVehicleListingBlock,
+  payloadVehicleListingBlockSchema,
+} from '@/lib/cms/page/blocks/vehicle-listing'
 
 describe('mapVehicleListingBlock', () => {
   it('maps a fully populated block', () => {
@@ -39,5 +42,38 @@ describe('mapVehicleListingBlock', () => {
     })
 
     expect(result.subheading).toEqual({ text: '', fontSize: 'md', color: '#323E48' })
+  })
+})
+
+describe('payloadVehicleListingBlockSchema', () => {
+  it('accepts a valid vehicleListing block', () => {
+    const result = payloadVehicleListingBlockSchema.safeParse({
+      id: 'block-1',
+      blockType: 'vehicleListing',
+      heading: { text: 'Unsere Fahrzeuge' },
+      maxItems: 9,
+    })
+
+    expect(result.success).toBe(true)
+  })
+
+  it('rejects a maxItems that is not a number', () => {
+    const result = payloadVehicleListingBlockSchema.safeParse({
+      id: 'block-1',
+      blockType: 'vehicleListing',
+      heading: { text: 'Unsere Fahrzeuge' },
+      maxItems: 'nine',
+    })
+
+    expect(result.success).toBe(false)
+  })
+
+  it('rejects a missing required heading', () => {
+    const result = payloadVehicleListingBlockSchema.safeParse({
+      id: 'block-1',
+      blockType: 'vehicleListing',
+    })
+
+    expect(result.success).toBe(false)
   })
 })

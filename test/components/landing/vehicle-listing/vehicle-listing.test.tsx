@@ -1,7 +1,8 @@
 import { render, screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 
 import { VehicleListing } from '@/components/landing/vehicle-listing/vehicle-listing'
+import { useVehicleFilterStore } from '@/stores/vehicle-filter.store'
 import type { VehicleListing as VehicleListingItem } from '@/types/datendrehscheibe/vehicle/vehicle-listing.types'
 
 const vehicles: VehicleListingItem[] = [
@@ -32,6 +33,10 @@ const vehicles: VehicleListingItem[] = [
 ]
 
 describe('VehicleListing', () => {
+  beforeEach(() => {
+    useVehicleFilterStore.getState().reset()
+  })
+
   it('renders the heading/subheading and every vehicle up to maxItems', () => {
     render(
       <VehicleListing
@@ -92,7 +97,7 @@ describe('VehicleListing', () => {
     expect(image.getAttribute('src')).not.toContain('cdn.example.com')
   })
 
-  it('shows an empty state when there are no vehicles', () => {
+  it('shows an empty state when there are no vehicles at all', () => {
     render(
       <VehicleListing
         heading={{ text: 'Unsere Fahrzeuge', fontSize: 'lg', color: '#323E48' }}
@@ -103,5 +108,36 @@ describe('VehicleListing', () => {
     )
 
     expect(screen.getByText('Aktuell sind keine Fahrzeuge verfügbar.')).toBeTruthy()
+  })
+
+  it("renders a filter bar and narrows the list to the store's active selection", () => {
+    useVehicleFilterStore.getState().setBrand('Audi')
+
+    render(
+      <VehicleListing
+        heading={{ text: 'Unsere Fahrzeuge', fontSize: 'lg', color: '#323E48' }}
+        subheading={{ text: '', fontSize: 'md', color: '#323E48' }}
+        maxItems={6}
+        vehicles={vehicles}
+      />,
+    )
+
+    expect(screen.queryByText('BMW 320d')).not.toBeInTheDocument()
+    expect(screen.getByText('Audi A4')).toBeTruthy()
+  })
+
+  it('shows a distinct empty state when a filter excludes every vehicle', () => {
+    useVehicleFilterStore.getState().setBrand('Porsche')
+
+    render(
+      <VehicleListing
+        heading={{ text: 'Unsere Fahrzeuge', fontSize: 'lg', color: '#323E48' }}
+        subheading={{ text: '', fontSize: 'md', color: '#323E48' }}
+        maxItems={6}
+        vehicles={vehicles}
+      />,
+    )
+
+    expect(screen.getByText('Keine Fahrzeuge entsprechen den ausgewählten Filtern.')).toBeTruthy()
   })
 })

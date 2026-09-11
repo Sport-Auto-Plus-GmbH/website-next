@@ -1,7 +1,12 @@
+'use client'
+
 import Link from 'next/link'
 
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { VehicleFilterBar } from '@/components/vehicle/vehicle-filter-bar/vehicle-filter-bar'
 import { VehiclePhoto } from '@/components/vehicle/vehicle-photo/vehicle-photo'
+import { useVehicleFilters } from '@/hooks/vehicle/use-vehicle-filters'
+import { filterVehicles } from '@/lib/vehicle/filter-vehicles'
 import type { FontSize } from '@/types/cms/page/blocks/styled-text.types'
 import type { VehicleListingBlock } from '@/types/cms/page/blocks/vehicle-listing.types'
 import type { VehicleListing as VehicleListingItem } from '@/types/datendrehscheibe/vehicle/vehicle-listing.types'
@@ -22,7 +27,8 @@ type VehicleListingProps = Omit<VehicleListingBlock, 'id' | 'blockType'> & {
 }
 
 export function VehicleListing({ heading, subheading, maxItems, vehicles }: VehicleListingProps) {
-  const visibleVehicles = vehicles.slice(0, maxItems)
+  const filterCriteria = useVehicleFilters()
+  const visibleVehicles = filterVehicles(vehicles, filterCriteria).slice(0, maxItems)
 
   return (
     <section className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-6 py-16">
@@ -43,8 +49,14 @@ export function VehicleListing({ heading, subheading, maxItems, vehicles }: Vehi
         )}
       </div>
 
+      <VehicleFilterBar vehicles={vehicles} />
+
       {visibleVehicles.length === 0 ? (
-        <p className="text-center text-muted-foreground">Aktuell sind keine Fahrzeuge verfügbar.</p>
+        <p className="text-center text-muted-foreground">
+          {vehicles.length === 0
+            ? 'Aktuell sind keine Fahrzeuge verfügbar.'
+            : 'Keine Fahrzeuge entsprechen den ausgewählten Filtern.'}
+        </p>
       ) : (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {visibleVehicles.map((vehicle) => (

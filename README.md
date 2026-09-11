@@ -22,6 +22,7 @@ this project follows.
 | UI components       | [shadcn/ui](https://ui.shadcn.com/) (Radix primitives)           | —       |
 | Icons               | FontAwesome Pro+ (licensed)                                      | 7.x     |
 | Client state        | [Zustand](https://zustand.docs.pmnd.rs/)                         | 5.0.15  |
+| Schema validation   | [Zod](https://zod.dev/)                                          | 4.x     |
 | Git hooks           | [Husky](https://typicode.github.io/husky/) + lint-staged         | 9.x     |
 | Formatting          | [Prettier](https://prettier.io/)                                 | 3.x     |
 | Linting             | [ESLint](https://eslint.org/) (`eslint-config-next`)             | 9.x     |
@@ -254,6 +255,17 @@ vehicle/`) — Payload and the Datendrehscheibe are independent APIs, fetched se
   re-fetching, so an editor changing `maxItems` in Payload updates the visible count
   immediately in the preview iframe, same as any text field — no new fetch needed since the
   Server Component already fetched a full list.
+- **Filtering** (brand/fuel type/gearbox/max price) is entirely client-side, via
+  **`stores/vehicle-filter.store.ts`** (Zustand — see `.ai/state/ZUSTAND.md`), read through
+  **`hooks/vehicle/use-vehicle-filters.ts`** and applied by the pure
+  **`lib/vehicle/filter-vehicles.ts`**, with the actual UI in
+  **`components/vehicle/vehicle-filter-bar/`** (its dropdown options are derived from
+  whatever's in the already-fetched vehicle list, not a fixed set). This project's usual
+  vehicle-filter flow additionally syncs filters to the URL and re-fetches server-side (see
+  `.ai/examples/PROJECT_EXAMPLES.md`'s "Vehicle Listing Filter Flow") — skipped here
+  deliberately: the Datendrehscheibe's listing endpoint takes no query params at all (the
+  full list is always fetched regardless), so there's nothing a server round-trip would buy
+  over filtering the already-in-memory list directly.
 - Each card links to **`src/app/fahrzeuge/[vehicleViewId]/page.tsx`** — a plain Next.js route,
   _not_ a Payload page (a vehicle has no editorial content, only live inventory data), backed
   by the new **`fetchVehicleDetail()`** (`GET /api/vehicle/v1.0/vehicles/{vehicleViewId}`,

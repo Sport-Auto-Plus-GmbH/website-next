@@ -2,7 +2,7 @@ import { PAYLOAD_API_URL } from '@/lib/cms/config'
 import type { Page, PageBlock } from '@/types/cms/page/page.types'
 import type { RawBlock } from '@/types/cms/page/raw-block.types'
 
-import { blockMappers } from './blocks'
+import { blockMappers, blockSchema } from './blocks'
 
 interface PayloadListResponse<T> {
   docs: T[]
@@ -19,11 +19,18 @@ export interface PayloadPageDoc {
 }
 
 function mapBlock(block: RawBlock): PageBlock | null {
-  const map = blockMappers[block.blockType]
-  // Payload can add a block type this Website doesn't render yet (or one this file has
-  // no mapper registered for) — skip rather than crash the whole page. Adding a new
-  // block only ever touches blocks/index.ts's registry, never this switch-free lookup.
-  return map ? map(block) : null
+  const parsed = blockSchema.safeParse(block)
+  // Payload can add a block type this Website doesn't render yet, or a known block can
+  // arrive malformed (a field renamed/removed on one side mid-deploy) — blockSchema
+  // (a Zod discriminated union, see .ai/backend/VALIDATION.md) rejects both the same way.
+  // Skip rather than crash the whole page. Adding a new block only ever touches
+  // blocks/index.ts's registry/schema list, never this file.
+  if (!parsed.success) {
+    return null
+  }
+
+  const map = blockMappers[parsed.data.blockType]
+  return map ? map(parsed.data) : null
 }
 
 /**

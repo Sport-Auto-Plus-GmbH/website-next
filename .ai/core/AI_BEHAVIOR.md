@@ -84,8 +84,34 @@ Generated code should feel like it was written by the original project author.
 # Prefer Existing Libraries
 
 Before writing custom code, check whether the project already includes a suitable
-dependency (Tailwind, shadcn/ui, FontAwesome, Zustand). Do not reinvent existing
+dependency (Tailwind, shadcn/ui, FontAwesome, Zustand, Zod). Do not reinvent existing
 functionality, and do not reach for a new library when the existing stack solves the problem.
+
+---
+
+# Validate With Zod, Manage Shared Client State With Zustand
+
+This project has standardized on Zod (`backend/VALIDATION.md`) and Zustand
+(`state/ZUSTAND.md`) — this is not optional tooling to reach for occasionally, it's the
+project's answer to two recurring problems:
+
+- **Any data crossing a trust boundary** (a CMS/API response with a genuinely variant shape
+  — a discriminated union, a form input, a Server Action's input) MUST be parsed with a Zod
+  schema, with the TypeScript type inferred from it (`z.infer`) — never a hand-written
+  `interface` kept in sync by hand, and never an `as` cast onto unvalidated external data.
+  A flat, single-shape CMS response is still fine with a lightweight parse-and-map step (see
+  `backend/VALIDATION.md`'s "CMS Response Validation") — Zod is for the variant/discriminated
+  case specifically, not a blanket requirement on every fetch function.
+- **Client state read or written by more than one component** (a filter panel's selections,
+  a mega-menu's open state, a multi-step form's in-progress values) MUST go through a
+  Zustand store under `stores/`, per `state/ZUSTAND.md`'s shape/selector/testing
+  conventions — never prop-drilled through three components or duplicated as parallel
+  `useState` calls. Purely local UI state that one component owns alone still stays a plain
+  `useState` — Zustand is for state genuinely shared across the tree, not a default for all
+  state.
+
+Check for both explicitly as part of "Review Before Completion" below, not only when a task
+happens to mention validation or state management by name.
 
 ---
 
@@ -225,6 +251,12 @@ Before finishing a task, ask:
 - Is this consistent, readable, reusable?
 - Is this the smallest possible solution?
 - Does this respect the Component → Hook → Service (CMS client) architecture?
+- Did this introduce or touch a variant/discriminated external shape (a CMS field, a form,
+  a Server Action input) without a Zod schema backing it? If so, add one (see "Validate With
+  Zod, Manage Shared Client State With Zustand" above) before considering the task done.
+- Did this introduce state now read or written by more than one component without a
+  Zustand store? If so, either extract one or justify in review why local `useState` still
+  fits.
 - Would a senior engineer approve this change?
 
 ---

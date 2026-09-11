@@ -45,6 +45,17 @@ fields exist, coercing known-safe shapes) over a full Zod schema for every respo
 field genuinely has complex/variant shape (e.g. Payload blocks with a discriminated `blockType`)
 — that case is a good fit for a Zod discriminated union.
 
+This is exactly what `lib/cms/page/blocks/` does: each block exports its own Zod schema
+(`payload<Block>BlockSchema`) right next to its `map<Block>Block()` function, with the
+block's own raw TS type derived from the schema (`z.infer`, never declared separately —
+one source of truth). `lib/cms/page/blocks/index.ts` combines every block's schema into one
+`z.discriminatedUnion('blockType', [...])`, and `fetch-page-by-slug.ts`'s `mapBlock` parses
+each raw block against it before looking up a mapper — an unrecognized `blockType` and a
+malformed known one both simply fail to parse and get skipped, never crash the page. Follow
+this same shape (schema-first, `z.infer`, one schema per block, combined into one
+discriminated union) for any other block-based domain, rather than reaching for a plain TS
+interface plus manual null-checks like earlier blocks in this project once did.
+
 ---
 
 # Form Validation UX

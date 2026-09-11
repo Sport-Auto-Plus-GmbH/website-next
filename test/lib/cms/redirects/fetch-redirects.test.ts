@@ -84,6 +84,20 @@ describe('fetchRedirects', () => {
     expect(result).toEqual([])
   })
 
+  it('skips a malformed doc without affecting the others (Zod discriminated union)', async () => {
+    mockFetchOnce({
+      docs: [
+        // Neither a valid "reference" nor "custom" `to.type` — schema rejects it outright.
+        { id: 7, from: '/broken', to: { type: 'not-a-real-type' } },
+        { id: 8, from: '/old-path', to: { type: 'custom', url: 'https://example.com/new' } },
+      ],
+    })
+
+    const result = await fetchRedirects()
+
+    expect(result).toEqual([{ from: '/old-path', to: 'https://example.com/new' }])
+  })
+
   it('throws when the request fails', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 500 }))
 

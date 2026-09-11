@@ -1,13 +1,17 @@
-import { mapStyledText, type PayloadStyledTextGroup } from '@/lib/cms/page/blocks/styled-text'
+import { z } from 'zod'
+
+import { mapStyledText, payloadStyledTextGroupSchema } from '@/lib/cms/page/blocks/styled-text'
 import type { HeroTeaserBlock } from '@/types/cms/page/blocks/hero-teaser.types'
 
-export interface PayloadHeroTeaserBlock {
-  id: string
-  blockType: 'heroTeaser'
-  headline: PayloadStyledTextGroup
-  subheadline?: PayloadStyledTextGroup | null
-  description?: PayloadStyledTextGroup | null
-}
+export const payloadHeroTeaserBlockSchema = z.object({
+  id: z.string(),
+  blockType: z.literal('heroTeaser'),
+  headline: payloadStyledTextGroupSchema,
+  subheadline: payloadStyledTextGroupSchema.nullish(),
+  description: payloadStyledTextGroupSchema.nullish(),
+})
+
+export type PayloadHeroTeaserBlock = z.infer<typeof payloadHeroTeaserBlockSchema>
 
 export function mapHeroTeaserBlock(block: PayloadHeroTeaserBlock): HeroTeaserBlock {
   return {

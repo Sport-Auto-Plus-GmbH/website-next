@@ -101,13 +101,18 @@ edit — the same problem this whole section exists to prevent, just moved from 
 file" to "one big switch." Instead:
 
 - `fetch-page-by-slug.ts` (or the equivalent for another block-based domain) only knows the
-  minimal `RawBlock` shape and does `blockMappers[block.blockType]?.(block) ?? null` — it MUST
-  NOT import any individual block's own type or mapper, and MUST NOT change when a block is
-  added or removed. Its own tests only need to cover the lookup/skip-unknown-blockType
-  behavior, not grow a case per block either.
+  minimal `RawBlock` shape, parses it against `blockSchema` (see `backend/VALIDATION.md`'s
+  "CMS Response Validation" — a Zod discriminated union combining every block's own schema),
+  and on success looks the matching mapper up in `blockMappers`. It MUST NOT import any
+  individual block's own type, schema, or mapper, and MUST NOT change when a block is added
+  or removed. An unrecognized `blockType` and a malformed known one both simply fail to
+  parse — same "skip, don't crash" outcome, one code path. Its own tests only need to cover
+  the parse/lookup/skip behavior, not grow a case per block either.
 - `lib/cms/page/blocks/index.ts` is the **only** file that changes when a block is added: one
-  import plus one `blockMappers` entry. Each block's own `map*Block()` function keeps its own
-  strict, block-specific parameter type (e.g. `PayloadHeroTeaserBlock`) — never loosen it to
+  import, one `blockMappers` entry, one entry in the `blockSchema` discriminated union's
+  array. Each block's own `map*Block()` function keeps its own strict, block-specific
+  parameter type (e.g. `PayloadHeroTeaserBlock`, itself `z.infer`'d from that block's own Zod
+  schema — never a hand-written interface kept in sync by hand) — never loosen it to
   `RawBlock` just to fit the registry. Bridge the two with a small generic helper local to the
   registry file (`asMapper<T extends RawBlock>(map: (raw: T) => PageBlock): BlockMapper`) that
   casts once, at registration, rather than threading a cast through every block file or back
