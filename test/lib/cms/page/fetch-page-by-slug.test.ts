@@ -82,6 +82,60 @@ describe('fetchPageBySlug', () => {
     })
   })
 
+  it('maps a page with a vehicleListing block', async () => {
+    mockFetchOnce({
+      docs: [
+        {
+          id: 1,
+          title: 'Fahrzeuge',
+          slug: 'fahrzeuge',
+          layout: [
+            {
+              id: 'block-1',
+              blockType: 'vehicleListing',
+              heading: { text: 'Unsere Fahrzeuge', fontSize: 'lg', color: '#323E48' },
+              subheading: { text: '', fontSize: 'md', color: '#323E48' },
+              maxItems: 9,
+            },
+          ],
+        },
+      ],
+    })
+
+    const result = await fetchPageBySlug('fahrzeuge')
+
+    expect(result?.blocks[0]).toEqual({
+      id: 'block-1',
+      blockType: 'vehicleListing',
+      heading: { text: 'Unsere Fahrzeuge', fontSize: 'lg', color: '#323E48' },
+      subheading: { text: '', fontSize: 'md', color: '#323E48' },
+      maxItems: 9,
+    })
+  })
+
+  it('defaults maxItems for a vehicleListing block missing it', async () => {
+    mockFetchOnce({
+      docs: [
+        {
+          id: 1,
+          title: 'Fahrzeuge',
+          slug: 'fahrzeuge',
+          layout: [
+            {
+              id: 'block-1',
+              blockType: 'vehicleListing',
+              heading: { text: 'Unsere Fahrzeuge', fontSize: 'lg', color: '#323E48' },
+            },
+          ],
+        },
+      ],
+    })
+
+    const result = await fetchPageBySlug('fahrzeuge')
+
+    expect(result?.blocks[0]).toMatchObject({ maxItems: 6 })
+  })
+
   it('skips a block type the Website does not render yet', async () => {
     mockFetchOnce({
       docs: [

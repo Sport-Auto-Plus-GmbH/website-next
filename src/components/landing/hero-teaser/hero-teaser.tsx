@@ -1,4 +1,5 @@
-import type { FontSize, HeroTeaserBlock } from '@/types/cms/page/blocks/hero-teaser.types'
+import type { HeroTeaserBlock } from '@/types/cms/page/blocks/hero-teaser.types'
+import type { FontSize } from '@/types/cms/page/blocks/styled-text.types'
 
 const FONT_SIZE_CLASSES: Record<FontSize, string> = {
   sm: 'text-2xl',

@@ -88,14 +88,37 @@ split each block into its own file rather than growing one file that defines eve
 
 ```
 types/cms/page/page.types.ts              Page + the PageBlock union only — no block fields
+types/cms/page/raw-block.types.ts         RawBlock: the minimal { id, blockType } shape
 types/cms/page/blocks/hero-teaser.types.ts  one block's shape, one file
-lib/cms/page/fetch-page-by-slug.ts        fetches + dispatches by blockType only
 lib/cms/page/blocks/hero-teaser.ts        that block's raw shape + its map*Block() function
+lib/cms/page/blocks/index.ts              the blockMappers registry (see below)
+lib/cms/page/fetch-page-by-slug.ts        fetches, then looks a mapper up in blockMappers
 ```
 
-`page.types.ts`/`fetch-page-by-slug.ts` (or the equivalent for another block-based domain)
-stay thin orchestration — the union type and the `blockType` dispatch `switch` — precisely so
-they don't become the one file every new block has to edit and grow forever.
+**Dispatch by registry, never by a growing `switch`.** A `switch (block.blockType) { case ... }`
+in the fetch/orchestration file is exactly the kind of file every new block would have to
+edit — the same problem this whole section exists to prevent, just moved from "one big types
+file" to "one big switch." Instead:
+
+- `fetch-page-by-slug.ts` (or the equivalent for another block-based domain) only knows the
+  minimal `RawBlock` shape and does `blockMappers[block.blockType]?.(block) ?? null` — it MUST
+  NOT import any individual block's own type or mapper, and MUST NOT change when a block is
+  added or removed. Its own tests only need to cover the lookup/skip-unknown-blockType
+  behavior, not grow a case per block either.
+- `lib/cms/page/blocks/index.ts` is the **only** file that changes when a block is added: one
+  import plus one `blockMappers` entry. Each block's own `map*Block()` function keeps its own
+  strict, block-specific parameter type (e.g. `PayloadHeroTeaserBlock`) — never loosen it to
+  `RawBlock` just to fit the registry. Bridge the two with a small generic helper local to the
+  registry file (`asMapper<T extends RawBlock>(map: (raw: T) => PageBlock): BlockMapper`) that
+  casts once, at registration, rather than threading a cast through every block file or back
+  into the orchestration file.
+
+A *rendering* dispatch (which component renders each block, e.g. `page-renderer.tsx`) is a
+separate concern from this data-mapping one — either a small `switch` or a
+`Record<string, Component>` lookup (see `examples/PROJECT_EXAMPLES.md`'s "Rendering a Payload
+Page Built From Blocks") is fine there, since it's a short, component-per-block list either
+way. The registry rule above is specifically about the fetch/mapping dispatch, which is where
+unbounded per-block growth actually tends to happen.
 
 ---
 

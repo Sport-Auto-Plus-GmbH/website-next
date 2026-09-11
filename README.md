@@ -164,17 +164,24 @@ covering every block, since that only gets worse as more blocks are added:
   `hero-teaser.types.ts`'s `HeroTeaserBlock`). `page.types.ts` itself only holds `Page` and
   the `PageBlock` union of every block type — it doesn't define any block's fields directly.
 - **`src/lib/cms/page/blocks/<block>.ts`** — that block's raw Payload response shape and its
-  `map<Block>Block()` function. `fetch-page-by-slug.ts` itself only fetches, dispatches to
-  the right mapper by `blockType` in `mapBlock`'s `switch`, and skips a block type it doesn't
-  recognize (a block payload-next added that this Website doesn't render yet) rather than
-  crashing the page.
+  `map<Block>Block()` function.
 - **`src/components/landing/<block>/`** — one rendering component per block type. Currently:
   `hero-teaser/` for `heroTeaser` (headline/subheadline/description, each with
-  editor-controlled text, font size, and color).
+  editor-controlled text, font size, and color) and `vehicle-listing/` for `vehicleListing`
+  (see "Vehicle Listing & Detail" below).
 
-Adding a second block type: a new file in each of the three locations above, a `case` in
-`fetch-page-by-slug.ts`'s `mapBlock`, and a `case` in `page-renderer.tsx`'s render switch —
-matching whatever block payload-next added under its own `src/blocks/content/`.
+`fetch-page-by-slug.ts` itself never grows as blocks are added — it only knows the minimal
+`RawBlock` shape (`id`/`blockType`, `types/cms/page/raw-block.types.ts`) and looks a mapper up
+by `blockType` in **`src/lib/cms/page/blocks/index.ts`**'s `blockMappers` registry, skipping a
+`blockType` with no entry (a block payload-next added that this Website doesn't render yet)
+rather than crashing the page. `page-renderer.tsx` still needs one `case` per block in its
+render switch (it's a short, human-scannable list of JSX, not worth a registry of its own the
+same way).
+
+Adding a second block type: a new file in each of the three `types`/`lib`/`components`
+locations above, one entry in `blocks/index.ts`'s `blockMappers`, and a `case` in
+`page-renderer.tsx`'s render switch — matching whatever block payload-next added under its
+own `src/blocks/content/`.
 
 ### Live Preview
 
@@ -228,6 +235,48 @@ else in `lib/cms/`.
   behavior (`Website-4.0/website/src/server.ts`).
 - The `matcher` excludes `api`, `_next/static`, `_next/image`, and a few metadata files so
   Proxy doesn't run (and doesn't fetch redirects) for every asset request.
+
+## Vehicle Listing & Detail
+
+A demo feature showing live Datendrehscheibe vehicle data through a Payload-configured block,
+plus a dedicated (non-Payload) detail route:
+
+- **`vehicleListing` block** (payload-next) only holds editorial config — heading, subheading,
+  `maxItems`. **`src/lib/cms/page/blocks/vehicle-listing.ts`** maps it the same way every other
+  block does.
+- **`src/app/page.tsx`** fetches the raw page, and only if it actually contains a
+  `vehicleListing` block, also calls **`fetchVehicleListing()`** (`lib/datendrehscheibe/
+vehicle/`) — Payload and the Datendrehscheibe are independent APIs, fetched separately and
+  combined here (see `.ai/backend/DATENDREHSCHEIBE_CLIENT.md`'s "Combining With Payload
+  Data"). The fetched list is passed down to `PageRenderer` as a plain prop.
+- **`src/components/landing/vehicle-listing/vehicle-listing.tsx`** is a presentational,
+  Live-Preview-safe component: it does `vehicles.slice(0, maxItems)` itself rather than
+  re-fetching, so an editor changing `maxItems` in Payload updates the visible count
+  immediately in the preview iframe, same as any text field — no new fetch needed since the
+  Server Component already fetched a full list.
+- Each card links to **`src/app/fahrzeuge/[vehicleViewId]/page.tsx`** — a plain Next.js route,
+  _not_ a Payload page (a vehicle has no editorial content, only live inventory data), backed
+  by the new **`fetchVehicleDetail()`** (`GET /api/vehicle/v1.0/vehicles/{vehicleViewId}`,
+  already in the vendored OpenAPI spec). Returns `notFound()` for an invalid id or a vehicle
+  no longer in stock (a 404 is a legitimate result, not an error — see
+  `.ai/backend/DATENDREHSCHEIBE_CLIENT.md`'s "Error Handling").
+- `FontSize`/`StyledText` (and their Payload-side mapper `mapStyledText`/`mapFontSize`) moved
+  from `hero-teaser.types.ts`/`hero-teaser.ts` into `types/cms/page/blocks/styled-text.types.ts`
+  / `lib/cms/page/blocks/styled-text.ts` once `vehicleListing`'s heading/subheading needed the
+  exact same shape — reuse that shared module for any future block needing "editable text with
+  size + color" rather than redefining it. Each block still defines its **own**
+  `FONT_SIZE_CLASSES` Tailwind mapping in its own component, though — the same `FontSize`
+  enum intentionally maps to different pixel sizes for a full-page hero vs. a section heading.
+- Vehicle photos come from the Datendrehscheibe's own CDN (HubSpot, signed URLs), rendered
+  via `next/image` like any other image — `next.config.ts`'s `images.remotePatterns` allows
+  `**.hubspotusercontent-eu1.net` alongside the existing local Payload media pattern. No
+  `search` restriction (the signed URLs carry `Expires`/`Signature` query params) and no fixed
+  `pathname` (it varies per file). The old Angular project never optimized or proxied these
+  images at all (plain `<img>`, no CDN allowlist anywhere in that codebase) — there's no
+  precedent to preserve here, just this project's own existing `next/image` convention.
+- Without Datendrehscheibe running, a page with a `vehicleListing` block throws (matches this
+  project's existing, documented behavior for any infrastructure failure — see
+  `.ai/quality/ERROR_HANDLING.md` — not something new introduced by this feature).
 
 ## Datendrehscheibe API Types
 

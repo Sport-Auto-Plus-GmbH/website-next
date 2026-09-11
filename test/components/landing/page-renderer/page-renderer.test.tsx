@@ -32,7 +32,7 @@ describe('PageRenderer', () => {
   it('renders the initial page before any live-preview update arrives', () => {
     useLivePreview.mockReturnValue({ data: initialRawPage, isLoading: true })
 
-    render(<PageRenderer initialRawPage={initialRawPage} />)
+    render(<PageRenderer initialRawPage={initialRawPage} vehicles={[]} />)
 
     expect(screen.getByText('Ihr Traumauto wartet auf Sie')).toBeTruthy()
   })
@@ -50,8 +50,63 @@ describe('PageRenderer', () => {
     }
     useLivePreview.mockReturnValue({ data: updatedRawPage, isLoading: false })
 
-    render(<PageRenderer initialRawPage={initialRawPage} />)
+    render(<PageRenderer initialRawPage={initialRawPage} vehicles={[]} />)
 
     expect(screen.getByText('Live editierte Headline')).toBeTruthy()
+  })
+
+  it('renders a vehicleListing block, slicing the pre-fetched vehicles to maxItems', () => {
+    const pageWithVehicleListing: PayloadPageDoc = {
+      id: 2,
+      title: 'Fahrzeuge',
+      slug: 'fahrzeuge',
+      layout: [
+        {
+          id: 'block-2',
+          blockType: 'vehicleListing',
+          heading: { text: 'Unsere Fahrzeuge', fontSize: 'lg', color: '#323E48' },
+          subheading: { text: '', fontSize: 'md', color: '#323E48' },
+          maxItems: 1,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- minimal raw block fixture, only the mapped fields matter here
+        } as any,
+      ],
+    }
+    useLivePreview.mockReturnValue({ data: pageWithVehicleListing, isLoading: false })
+
+    render(
+      <PageRenderer
+        initialRawPage={pageWithVehicleListing}
+        vehicles={[
+          {
+            id: 1,
+            brand: 'BMW',
+            carName: '320d',
+            equipmentLine: null,
+            mainImage: null,
+            overviewPrice: null,
+            mileage: null,
+            fuelType: null,
+            gearbox: null,
+            vehicleType: null,
+          },
+          {
+            id: 2,
+            brand: 'Audi',
+            carName: 'A4',
+            equipmentLine: null,
+            mainImage: null,
+            overviewPrice: null,
+            mileage: null,
+            fuelType: null,
+            gearbox: null,
+            vehicleType: null,
+          },
+        ]}
+      />,
+    )
+
+    expect(screen.getByText('Unsere Fahrzeuge')).toBeTruthy()
+    expect(screen.getByText('BMW 320d')).toBeTruthy()
+    expect(screen.queryByText('Audi A4')).not.toBeInTheDocument()
   })
 })

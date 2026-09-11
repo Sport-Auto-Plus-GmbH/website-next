@@ -1,15 +1,12 @@
 import { PAYLOAD_API_URL } from '@/lib/cms/config'
 import type { Page, PageBlock } from '@/types/cms/page/page.types'
+import type { RawBlock } from '@/types/cms/page/raw-block.types'
 
-import { mapHeroTeaserBlock, type PayloadHeroTeaserBlock } from './blocks/hero-teaser'
+import { blockMappers } from './blocks'
 
 interface PayloadListResponse<T> {
   docs: T[]
 }
-
-// Payload can add a block type this Website doesn't render yet — see mapBlock below.
-// Add each new block's raw type to this union as it's added under blocks/.
-type PayloadPageBlock = PayloadHeroTeaserBlock | { id: string; blockType: string }
 
 // Exported so the Live Preview client wrapper (components/landing/page-renderer/) can
 // type the raw postMessage payload it receives — see mapPage below for why it also
@@ -18,17 +15,15 @@ export interface PayloadPageDoc {
   id: number
   title: string
   slug: string
-  layout?: PayloadPageBlock[] | null
+  layout?: RawBlock[] | null
 }
 
-function mapBlock(block: PayloadPageBlock): PageBlock | null {
-  switch (block.blockType) {
-    case 'heroTeaser':
-      return mapHeroTeaserBlock(block as PayloadHeroTeaserBlock)
-    default:
-      // Not yet supported on the Website — skip rather than crash the whole page.
-      return null
-  }
+function mapBlock(block: RawBlock): PageBlock | null {
+  const map = blockMappers[block.blockType]
+  // Payload can add a block type this Website doesn't render yet (or one this file has
+  // no mapper registered for) — skip rather than crash the whole page. Adding a new
+  // block only ever touches blocks/index.ts's registry, never this switch-free lookup.
+  return map ? map(block) : null
 }
 
 /**
